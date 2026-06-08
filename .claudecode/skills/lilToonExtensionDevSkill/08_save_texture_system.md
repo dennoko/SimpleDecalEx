@@ -193,14 +193,3 @@ public class MyPackPlugin : Plugin<MyPackPlugin> {
 7. [ ] **エディタプレビュー**（InitializeOnLoad + AssetPostprocessor + インスペクター変更検知 + 署名）を実装。
 8. [ ] パック後の全機能ON時テクスチャ数が **64 に十分な余裕**（数枚マージン）を持って収まるか再確認（将来のlilToon更新で増える前提）。
 
----
-
-## 9. 本リポジトリでの該当ファイル
-
-- シェーダー：`Shaders/custom.hlsl`（`_CustomMaskPacked` 宣言＋4箇所のチャンネルサンプリング）、`Shaders/lilCustomShaderProperties.lilblock`（`_CustomMaskPacked` 宣言、個別スロット残置）
-- ベイク：`Shaders/DennokoEx_MaskPacker.shader`、`Editor/DennokoExMaskPacker.cs`
-- アップロード：`Editor/NDMF/DennokoExPackMasksPlugin.cs`、`Editor/NDMF/DennokoEx.NDMF.Editor.asmdef`
-- エディタプレビュー：`Editor/DennokoExMaskSync.cs`、インスペクター側フック `Editor/DennokoExInspector.cs`
-- 診断：`Editor/DennokoExKeywordDiagnostics.cs`（キーワード空間スキャン／アップロード前後キャプチャ）
-
-チャンネル割当（本リポジトリ）：**R = Reflection 2nd / G = Rim 2nd / B = Normal 3rd / A = Normal 1st**。デカールの配置マスクは別UV空間のためパック対象外（個別テクスチャのまま）。
