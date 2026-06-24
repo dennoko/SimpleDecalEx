@@ -2,100 +2,81 @@
 // Macro
 
 // Custom variables
-// SimpleDecalEx: lilToon の Main2nd/Main3rd と同じデカール仕様のセットを 6 枚ぶん複製する。
-// プロパティ名のサフィックス（_ST / _ScrollRotate / Angle / IsDecal ...）は lilGetSubTex の
-// 呼び出し規約に合わせて厳守する（custom.hlsl 下部の LIL_SDEX_SAMPLE マクロが ## で展開するため）。
+// SimpleDecalEx: lilToon の lilGetSubTex デカール仕様のセットを 6 枚ぶん複製する。
+// 配置は Position(中心UV) と Scale(UVサイズ) で持ち、合成時に _ST を組み立てる。
+// ミラー/コピー/左右限定は _DecalNMirror の単一 enum にまとめ、合成時にフラグへ展開する。
 #define LIL_CUSTOM_PROPERTIES \
-    float4 _Decal1Color;                \
-    float4 _Decal1Tex_ST;               \
-    float4 _Decal1Tex_ScrollRotate;     \
-    float  _Decal1TexAngle;             \
-    uint   _Decal1Enable;               \
-    uint   _Decal1TexBlendMode;         \
-    uint   _Decal1Tex_UVMode;           \
-    uint   _Decal1Tex_Cull;             \
-    uint   _Decal1TexIsDecal;           \
-    uint   _Decal1TexIsLeftOnly;        \
-    uint   _Decal1TexIsRightOnly;       \
-    uint   _Decal1TexShouldCopy;        \
-    uint   _Decal1TexShouldFlipMirror;  \
-    uint   _Decal1TexShouldFlipCopy;    \
-    uint   _Decal1TexIsMSDF;            \
-    float4 _Decal2Color;                \
-    float4 _Decal2Tex_ST;               \
-    float4 _Decal2Tex_ScrollRotate;     \
-    float  _Decal2TexAngle;             \
-    uint   _Decal2Enable;               \
-    uint   _Decal2TexBlendMode;         \
-    uint   _Decal2Tex_UVMode;           \
-    uint   _Decal2Tex_Cull;             \
-    uint   _Decal2TexIsDecal;           \
-    uint   _Decal2TexIsLeftOnly;        \
-    uint   _Decal2TexIsRightOnly;       \
-    uint   _Decal2TexShouldCopy;        \
-    uint   _Decal2TexShouldFlipMirror;  \
-    uint   _Decal2TexShouldFlipCopy;    \
-    uint   _Decal2TexIsMSDF;            \
-    float4 _Decal3Color;                \
-    float4 _Decal3Tex_ST;               \
-    float4 _Decal3Tex_ScrollRotate;     \
-    float  _Decal3TexAngle;             \
-    uint   _Decal3Enable;               \
-    uint   _Decal3TexBlendMode;         \
-    uint   _Decal3Tex_UVMode;           \
-    uint   _Decal3Tex_Cull;             \
-    uint   _Decal3TexIsDecal;           \
-    uint   _Decal3TexIsLeftOnly;        \
-    uint   _Decal3TexIsRightOnly;       \
-    uint   _Decal3TexShouldCopy;        \
-    uint   _Decal3TexShouldFlipMirror;  \
-    uint   _Decal3TexShouldFlipCopy;    \
-    uint   _Decal3TexIsMSDF;            \
-    float4 _Decal4Color;                \
-    float4 _Decal4Tex_ST;               \
-    float4 _Decal4Tex_ScrollRotate;     \
-    float  _Decal4TexAngle;             \
-    uint   _Decal4Enable;               \
-    uint   _Decal4TexBlendMode;         \
-    uint   _Decal4Tex_UVMode;           \
-    uint   _Decal4Tex_Cull;             \
-    uint   _Decal4TexIsDecal;           \
-    uint   _Decal4TexIsLeftOnly;        \
-    uint   _Decal4TexIsRightOnly;       \
-    uint   _Decal4TexShouldCopy;        \
-    uint   _Decal4TexShouldFlipMirror;  \
-    uint   _Decal4TexShouldFlipCopy;    \
-    uint   _Decal4TexIsMSDF;            \
-    float4 _Decal5Color;                \
-    float4 _Decal5Tex_ST;               \
-    float4 _Decal5Tex_ScrollRotate;     \
-    float  _Decal5TexAngle;             \
-    uint   _Decal5Enable;               \
-    uint   _Decal5TexBlendMode;         \
-    uint   _Decal5Tex_UVMode;           \
-    uint   _Decal5Tex_Cull;             \
-    uint   _Decal5TexIsDecal;           \
-    uint   _Decal5TexIsLeftOnly;        \
-    uint   _Decal5TexIsRightOnly;       \
-    uint   _Decal5TexShouldCopy;        \
-    uint   _Decal5TexShouldFlipMirror;  \
-    uint   _Decal5TexShouldFlipCopy;    \
-    uint   _Decal5TexIsMSDF;            \
-    float4 _Decal6Color;                \
-    float4 _Decal6Tex_ST;               \
-    float4 _Decal6Tex_ScrollRotate;     \
-    float  _Decal6TexAngle;             \
-    uint   _Decal6Enable;               \
-    uint   _Decal6TexBlendMode;         \
-    uint   _Decal6Tex_UVMode;           \
-    uint   _Decal6Tex_Cull;             \
-    uint   _Decal6TexIsDecal;           \
-    uint   _Decal6TexIsLeftOnly;        \
-    uint   _Decal6TexIsRightOnly;       \
-    uint   _Decal6TexShouldCopy;        \
-    uint   _Decal6TexShouldFlipMirror;  \
-    uint   _Decal6TexShouldFlipCopy;    \
-    uint   _Decal6TexIsMSDF;
+    float4 _Decal1Color;    \
+    float  _Decal1PosX;     \
+    float  _Decal1PosY;     \
+    float  _Decal1ScaleX;   \
+    float  _Decal1ScaleY;   \
+    float  _Decal1Angle;    \
+    uint   _Decal1Enable;   \
+    uint   _Decal1BlendMode;\
+    uint   _Decal1UVMode;   \
+    uint   _Decal1Cull;     \
+    uint   _Decal1Mirror;   \
+    float4 _Decal2Color;    \
+    float  _Decal2PosX;     \
+    float  _Decal2PosY;     \
+    float  _Decal2ScaleX;   \
+    float  _Decal2ScaleY;   \
+    float  _Decal2Angle;    \
+    uint   _Decal2Enable;   \
+    uint   _Decal2BlendMode;\
+    uint   _Decal2UVMode;   \
+    uint   _Decal2Cull;     \
+    uint   _Decal2Mirror;   \
+    float4 _Decal3Color;    \
+    float  _Decal3PosX;     \
+    float  _Decal3PosY;     \
+    float  _Decal3ScaleX;   \
+    float  _Decal3ScaleY;   \
+    float  _Decal3Angle;    \
+    uint   _Decal3Enable;   \
+    uint   _Decal3BlendMode;\
+    uint   _Decal3UVMode;   \
+    uint   _Decal3Cull;     \
+    uint   _Decal3Mirror;   \
+    float4 _Decal4Color;    \
+    float  _Decal4PosX;     \
+    float  _Decal4PosY;     \
+    float  _Decal4ScaleX;   \
+    float  _Decal4ScaleY;   \
+    float  _Decal4Angle;    \
+    uint   _Decal4Enable;   \
+    uint   _Decal4BlendMode;\
+    uint   _Decal4UVMode;   \
+    uint   _Decal4Cull;     \
+    uint   _Decal4Mirror;   \
+    float4 _Decal5Color;    \
+    float  _Decal5PosX;     \
+    float  _Decal5PosY;     \
+    float  _Decal5ScaleX;   \
+    float  _Decal5ScaleY;   \
+    float  _Decal5Angle;    \
+    uint   _Decal5Enable;   \
+    uint   _Decal5BlendMode;\
+    uint   _Decal5UVMode;   \
+    uint   _Decal5Cull;     \
+    uint   _Decal5Mirror;   \
+    float4 _Decal6Color;    \
+    float  _Decal6PosX;     \
+    float  _Decal6PosY;     \
+    float  _Decal6ScaleX;   \
+    float  _Decal6ScaleY;   \
+    float  _Decal6Angle;    \
+    uint   _Decal6Enable;   \
+    uint   _Decal6BlendMode;\
+    uint   _Decal6UVMode;   \
+    uint   _Decal6Cull;     \
+    uint   _Decal6Mirror;   \
+    float4 _SDEXMatCapColor;          \
+    uint   _SDEXMatCapEnable;         \
+    uint   _SDEXMatCapBlendMode;      \
+    float  _SDEXMatCapShadowMask;     \
+    float  _SDEXMatCapEnableLighting;
 
 // Custom textures
 // SimpleDecalEx: デカール 6 枚ぶんのテクスチャ。SAMPLER は新規に持たず、
@@ -106,33 +87,48 @@
     TEXTURE2D(_Decal3Tex); \
     TEXTURE2D(_Decal4Tex); \
     TEXTURE2D(_Decal5Tex); \
-    TEXTURE2D(_Decal6Tex);
+    TEXTURE2D(_Decal6Tex); \
+    TEXTURE2D(_SDEXMatCapTex);
 
 //----------------------------------------------------------------------------------------------------------------------
 // SimpleDecalEx: デカール合成マクロ
 //
-// lilGetSubTex を共有サンプラーで呼び出す（lilToon の LIL_GET_SUBTEX 相当だが
-// サンプラーを lil_sampler_linear_repeat に固定し、アトラスアニメーションは使わない）。
-#define LIL_SDEX_SAMPLE(tex, sdexUV) \
-    lilGetSubTex( \
-        tex, tex##_ST, tex##_ScrollRotate, tex##Angle, sdexUV, fd.nv, \
-        tex##IsDecal, tex##IsLeftOnly, tex##IsRightOnly, tex##ShouldCopy, \
-        tex##ShouldFlipMirror, tex##ShouldFlipCopy, tex##IsMSDF, fd.isRightHand, \
-        float4(1,1,1,1), float4(1,1,0,1) LIL_SAMP_IN(lil_sampler_linear_repeat))
-
-// デカール 1 枚を fd.col へ合成する（UV モード・カリング・ブレンドモード対応）。
-// ライティングの直前（BEFORE_SHADOW）で合成するため、デカールは表面と同じ陰影を受ける。
+// _ST の組み立て:
+//   テクスチャの [0,1] をメッシュUVの「中心 pos / サイズ scale」の領域へ写す。
+//   tex_uv = mesh_uv / scale + (0.5 - pos / scale)  ->  _ST = float4(1/scale, 0.5 - pos/scale)
+//   既定 (pos=0.5, scale=1) では _ST = (1,1,0,0) となり、変換なしでUV全面に一致する。
+//
+// _DecalNMirror（排他選択）-> lilCalcDecalUV のフラグへの展開:
+//   0:None / 1:Left Only / 2:Right Only / 3:Symmetry Copy / 4:Symmetry Copy(Flip) / 5:Flip on Mirror
+//
+// 合成先は fd.col ではなく fd.albedo。lilToon は lil_pass_forward_*.hlsl で
+//   `fd.albedo = fd.col.rgb;` の後に BEFORE_SHADOW を実行し、続く OVERRIDE_SHADOW で
+//   `fd.col.rgb` を albedo から再構築するため、fd.col に書くと陰影計算で上書きされる。
+//   albedo に合成することでデカールは表面と同じ陰影を受けつつ確実に反映される。
 #define LIL_SDEX_APPLY(idx) \
     if(_Decal##idx##Enable) \
     { \
         float2 sdexUV = fd.uv0; \
-        if(_Decal##idx##Tex_UVMode == 1) sdexUV = fd.uv1; \
-        else if(_Decal##idx##Tex_UVMode == 2) sdexUV = fd.uv2; \
-        else if(_Decal##idx##Tex_UVMode == 3) sdexUV = fd.uv3; \
-        else if(_Decal##idx##Tex_UVMode == 4) sdexUV = fd.uvMat; \
-        float4 sdexCol = _Decal##idx##Color * LIL_SDEX_SAMPLE(_Decal##idx##Tex, sdexUV); \
-        if((_Decal##idx##Tex_Cull == 1 && fd.facing > 0) || (_Decal##idx##Tex_Cull == 2 && fd.facing < 0)) sdexCol.a = 0.0; \
-        fd.col.rgb = lilBlendColor(fd.col.rgb, sdexCol.rgb, sdexCol.a, _Decal##idx##TexBlendMode); \
+        uint sdexUVMode = _Decal##idx##UVMode; \
+        if(sdexUVMode == 1) sdexUV = fd.uv1; \
+        else if(sdexUVMode == 2) sdexUV = fd.uv2; \
+        else if(sdexUVMode == 3) sdexUV = fd.uv3; \
+        float2 sdexScale = max(abs(float2(_Decal##idx##ScaleX, _Decal##idx##ScaleY)), 1e-4); \
+        float2 sdexPos   = float2(_Decal##idx##PosX, _Decal##idx##PosY); \
+        float4 sdexST    = float4(1.0 / sdexScale, 0.5 - sdexPos / sdexScale); \
+        uint sdexMir = _Decal##idx##Mirror; \
+        bool sdexLeftOnly  = sdexMir == 1; \
+        bool sdexRightOnly = sdexMir == 2; \
+        bool sdexCopy      = sdexMir == 3 || sdexMir == 4; \
+        bool sdexFlipCopy  = sdexMir == 4; \
+        bool sdexFlipMir   = sdexMir == 5; \
+        float4 sdexCol = _Decal##idx##Color * lilGetSubTex( \
+            _Decal##idx##Tex, sdexST, float4(0,0,0,0), _Decal##idx##Angle, sdexUV, fd.nv, \
+            true, sdexLeftOnly, sdexRightOnly, sdexCopy, sdexFlipMir, sdexFlipCopy, false, fd.isRightHand, \
+            float4(1,1,1,1), float4(1,1,0,1) LIL_SAMP_IN(lil_sampler_linear_repeat)); \
+        if((_Decal##idx##Cull == 1 && fd.facing > 0) || (_Decal##idx##Cull == 2 && fd.facing < 0)) sdexCol.a = 0.0; \
+        fd.albedo = lilBlendColor(fd.albedo, sdexCol.rgb, sdexCol.a, _Decal##idx##BlendMode); \
+        sdexCoverage = max(sdexCoverage, sdexCol.a); \
     }
 
 // Add vertex shader input
@@ -191,14 +187,38 @@
 //#define BEFORE_xx
 //#define OVERRIDE_xx
 
-// SimpleDecalEx: Main3rd 合成の直後（ライティングの直前）に 6 枚のデカールを合成する。
+// SimpleDecalEx: albedo 確定後・陰影計算の直前（BEFORE_SHADOW）で 6 枚のデカールを
+// fd.albedo に合成する。これによりメインカラー処理の後段に入り、かつ陰影で上書きされない。
+// 併せて、全デカールの可視アルファの和集合 sdexCoverage を蓄積し、後段の MatCap マスクに使う。
+// sdexCoverage は同一フラグメント関数内に展開される後続フック（BEFORE_EMISSION_1ST）から参照する。
 #define BEFORE_SHADOW \
+    float sdexCoverage = 0.0; \
     LIL_SDEX_APPLY(1) \
     LIL_SDEX_APPLY(2) \
     LIL_SDEX_APPLY(3) \
     LIL_SDEX_APPLY(4) \
     LIL_SDEX_APPLY(5) \
     LIL_SDEX_APPLY(6)
+
+// SimpleDecalEx: MatCap 合成。
+// フック選定理由（BEFORE_EMISSION_1ST）:
+//   - 通常パス / lite パスの双方で陰影計算（OVERRIDE_SHADOW）より後に実行される唯一の共通点。
+//     （lite では BEFORE_MATCAP が陰影より前に来るため使えない）
+//   - 両パスとも #ifndef LIL_PASS_FORWARDADD の内側にあり、加算ライトパスでは実行されない＝二重合成しない。
+//   - BEFORE_SHADOW で宣言した sdexCoverage が関数スコープで参照可能。
+// 仕様:
+//   - 既定はオーバーレイ（陰影非依存）。fd.col へ直接 lilBlendColor で重ねる。
+//   - Enable Lighting=1 で fd.lightColor を乗じて陰影に追従。
+//   - Shadow Mask=1 で fd.shadowmix（影=0,非影=1）により影部分を減衰。
+//   - 適用範囲は sdexCoverage（全デカール領域の和集合）に限定。
+#define BEFORE_EMISSION_1ST \
+    if(_SDEXMatCapEnable && sdexCoverage > 0.0) \
+    { \
+        float3 sdexMat = _SDEXMatCapColor.rgb * LIL_SAMPLE_2D(_SDEXMatCapTex, lil_sampler_linear_repeat, fd.uvMat).rgb; \
+        sdexMat = lerp(sdexMat, sdexMat * fd.lightColor, _SDEXMatCapEnableLighting); \
+        float sdexMatMask = sdexCoverage * _SDEXMatCapColor.a * lerp(1.0, fd.shadowmix, _SDEXMatCapShadowMask); \
+        fd.col.rgb = lilBlendColor(fd.col.rgb, sdexMat, sdexMatMask, _SDEXMatCapBlendMode); \
+    }
 
 //----------------------------------------------------------------------------------------------------------------------
 // Information about variables

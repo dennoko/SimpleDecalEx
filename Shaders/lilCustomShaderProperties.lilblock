@@ -13,100 +13,94 @@
         //   [Normal]        : テクスチャを法線マップとして扱う
         //   [HDR]           : カラーをHDR入力として扱う
         //
-        // SimpleDecalEx: デカール 6 枚。各セットは lilToon の Main2nd デカール仕様に準拠する。
+        // SimpleDecalEx: デカール 6 枚。各セットは lilToon の lilGetSubTex デカール仕様に準拠する。
+        //   配置は Position(中心UV) と Scale(UVサイズ) で指定し、custom.hlsl 側で _ST を組み立てる。
+        //   ミラー/コピー/左右限定は _DecalNMirror の単一ドロップダウンで排他選択する。
+        //   合成・表示はカスタムインスペクタ側で手動描画するため、ここでの属性は既定インスペクタ用の保険。
 
-        [lilToggle]     _Decal1Enable              ("Decal 1 Enable", Int) = 0
-                        _Decal1Color               ("Decal 1 Color", Color) = (1,1,1,1)
-                        _Decal1Tex                 ("Decal 1 Texture", 2D) = "white" {}
-        [lilEnum]       _Decal1Tex_UVMode          ("UV Mode|UV0|UV1|UV2|UV3|MatCap", Int) = 0
-        [lilEnum]       _Decal1TexBlendMode        ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
-        [lilEnum]       _Decal1Tex_Cull            ("Cull Mode|Off|Front|Back", Int) = 0
-        [lilAngle]      _Decal1TexAngle            ("Angle", Float) = 0
-        [lilUVAnim]     _Decal1Tex_ScrollRotate    ("Scroll & Rotate", Vector) = (0,0,0,0)
-        [lilToggle]     _Decal1TexIsDecal          ("As Decal", Int) = 1
-        [lilToggle]     _Decal1TexIsLeftOnly       ("Left Only", Int) = 0
-        [lilToggle]     _Decal1TexIsRightOnly      ("Right Only", Int) = 0
-        [lilToggle]     _Decal1TexShouldCopy       ("Mirror Copy", Int) = 0
-        [lilToggle]     _Decal1TexShouldFlipMirror ("Flip Mirror", Int) = 0
-        [lilToggle]     _Decal1TexShouldFlipCopy   ("Flip Copy", Int) = 0
-        [lilToggle]     _Decal1TexIsMSDF           ("As MSDF", Int) = 0
+        [lilToggle]     _Decal1Enable       ("Decal 1 Enable", Int) = 0
+        [NoScaleOffset] _Decal1Tex          ("Decal 1 Texture", 2D) = "white" {}
+                        _Decal1Color        ("Decal 1 Color", Color) = (1,1,1,1)
+                        _Decal1PosX         ("Position X", Float) = 0.5
+                        _Decal1PosY         ("Position Y", Float) = 0.5
+                        _Decal1ScaleX       ("Scale X", Float) = 1
+                        _Decal1ScaleY       ("Scale Y", Float) = 1
+        [lilAngle]      _Decal1Angle        ("Angle", Float) = 0
+        [lilEnum]       _Decal1UVMode       ("UV Mode|UV0|UV1|UV2|UV3", Int) = 0
+        [lilEnum]       _Decal1BlendMode    ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
+        [lilEnum]       _Decal1Cull         ("Cull Mode|Off|Front|Back", Int) = 0
+        [lilEnum]       _Decal1Mirror       ("Mirror Mode|None|Left Only|Right Only|Symmetry Copy|Symmetry Copy (Flip)|Flip on Mirror", Int) = 0
 
-        [lilToggle]     _Decal2Enable              ("Decal 2 Enable", Int) = 0
-                        _Decal2Color               ("Decal 2 Color", Color) = (1,1,1,1)
-                        _Decal2Tex                 ("Decal 2 Texture", 2D) = "white" {}
-        [lilEnum]       _Decal2Tex_UVMode          ("UV Mode|UV0|UV1|UV2|UV3|MatCap", Int) = 0
-        [lilEnum]       _Decal2TexBlendMode        ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
-        [lilEnum]       _Decal2Tex_Cull            ("Cull Mode|Off|Front|Back", Int) = 0
-        [lilAngle]      _Decal2TexAngle            ("Angle", Float) = 0
-        [lilUVAnim]     _Decal2Tex_ScrollRotate    ("Scroll & Rotate", Vector) = (0,0,0,0)
-        [lilToggle]     _Decal2TexIsDecal          ("As Decal", Int) = 1
-        [lilToggle]     _Decal2TexIsLeftOnly       ("Left Only", Int) = 0
-        [lilToggle]     _Decal2TexIsRightOnly      ("Right Only", Int) = 0
-        [lilToggle]     _Decal2TexShouldCopy       ("Mirror Copy", Int) = 0
-        [lilToggle]     _Decal2TexShouldFlipMirror ("Flip Mirror", Int) = 0
-        [lilToggle]     _Decal2TexShouldFlipCopy   ("Flip Copy", Int) = 0
-        [lilToggle]     _Decal2TexIsMSDF           ("As MSDF", Int) = 0
+        [lilToggle]     _Decal2Enable       ("Decal 2 Enable", Int) = 0
+        [NoScaleOffset] _Decal2Tex          ("Decal 2 Texture", 2D) = "white" {}
+                        _Decal2Color        ("Decal 2 Color", Color) = (1,1,1,1)
+                        _Decal2PosX         ("Position X", Float) = 0.5
+                        _Decal2PosY         ("Position Y", Float) = 0.5
+                        _Decal2ScaleX       ("Scale X", Float) = 1
+                        _Decal2ScaleY       ("Scale Y", Float) = 1
+        [lilAngle]      _Decal2Angle        ("Angle", Float) = 0
+        [lilEnum]       _Decal2UVMode       ("UV Mode|UV0|UV1|UV2|UV3", Int) = 0
+        [lilEnum]       _Decal2BlendMode    ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
+        [lilEnum]       _Decal2Cull         ("Cull Mode|Off|Front|Back", Int) = 0
+        [lilEnum]       _Decal2Mirror       ("Mirror Mode|None|Left Only|Right Only|Symmetry Copy|Symmetry Copy (Flip)|Flip on Mirror", Int) = 0
 
-        [lilToggle]     _Decal3Enable              ("Decal 3 Enable", Int) = 0
-                        _Decal3Color               ("Decal 3 Color", Color) = (1,1,1,1)
-                        _Decal3Tex                 ("Decal 3 Texture", 2D) = "white" {}
-        [lilEnum]       _Decal3Tex_UVMode          ("UV Mode|UV0|UV1|UV2|UV3|MatCap", Int) = 0
-        [lilEnum]       _Decal3TexBlendMode        ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
-        [lilEnum]       _Decal3Tex_Cull            ("Cull Mode|Off|Front|Back", Int) = 0
-        [lilAngle]      _Decal3TexAngle            ("Angle", Float) = 0
-        [lilUVAnim]     _Decal3Tex_ScrollRotate    ("Scroll & Rotate", Vector) = (0,0,0,0)
-        [lilToggle]     _Decal3TexIsDecal          ("As Decal", Int) = 1
-        [lilToggle]     _Decal3TexIsLeftOnly       ("Left Only", Int) = 0
-        [lilToggle]     _Decal3TexIsRightOnly      ("Right Only", Int) = 0
-        [lilToggle]     _Decal3TexShouldCopy       ("Mirror Copy", Int) = 0
-        [lilToggle]     _Decal3TexShouldFlipMirror ("Flip Mirror", Int) = 0
-        [lilToggle]     _Decal3TexShouldFlipCopy   ("Flip Copy", Int) = 0
-        [lilToggle]     _Decal3TexIsMSDF           ("As MSDF", Int) = 0
+        [lilToggle]     _Decal3Enable       ("Decal 3 Enable", Int) = 0
+        [NoScaleOffset] _Decal3Tex          ("Decal 3 Texture", 2D) = "white" {}
+                        _Decal3Color        ("Decal 3 Color", Color) = (1,1,1,1)
+                        _Decal3PosX         ("Position X", Float) = 0.5
+                        _Decal3PosY         ("Position Y", Float) = 0.5
+                        _Decal3ScaleX       ("Scale X", Float) = 1
+                        _Decal3ScaleY       ("Scale Y", Float) = 1
+        [lilAngle]      _Decal3Angle        ("Angle", Float) = 0
+        [lilEnum]       _Decal3UVMode       ("UV Mode|UV0|UV1|UV2|UV3", Int) = 0
+        [lilEnum]       _Decal3BlendMode    ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
+        [lilEnum]       _Decal3Cull         ("Cull Mode|Off|Front|Back", Int) = 0
+        [lilEnum]       _Decal3Mirror       ("Mirror Mode|None|Left Only|Right Only|Symmetry Copy|Symmetry Copy (Flip)|Flip on Mirror", Int) = 0
 
-        [lilToggle]     _Decal4Enable              ("Decal 4 Enable", Int) = 0
-                        _Decal4Color               ("Decal 4 Color", Color) = (1,1,1,1)
-                        _Decal4Tex                 ("Decal 4 Texture", 2D) = "white" {}
-        [lilEnum]       _Decal4Tex_UVMode          ("UV Mode|UV0|UV1|UV2|UV3|MatCap", Int) = 0
-        [lilEnum]       _Decal4TexBlendMode        ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
-        [lilEnum]       _Decal4Tex_Cull            ("Cull Mode|Off|Front|Back", Int) = 0
-        [lilAngle]      _Decal4TexAngle            ("Angle", Float) = 0
-        [lilUVAnim]     _Decal4Tex_ScrollRotate    ("Scroll & Rotate", Vector) = (0,0,0,0)
-        [lilToggle]     _Decal4TexIsDecal          ("As Decal", Int) = 1
-        [lilToggle]     _Decal4TexIsLeftOnly       ("Left Only", Int) = 0
-        [lilToggle]     _Decal4TexIsRightOnly      ("Right Only", Int) = 0
-        [lilToggle]     _Decal4TexShouldCopy       ("Mirror Copy", Int) = 0
-        [lilToggle]     _Decal4TexShouldFlipMirror ("Flip Mirror", Int) = 0
-        [lilToggle]     _Decal4TexShouldFlipCopy   ("Flip Copy", Int) = 0
-        [lilToggle]     _Decal4TexIsMSDF           ("As MSDF", Int) = 0
+        [lilToggle]     _Decal4Enable       ("Decal 4 Enable", Int) = 0
+        [NoScaleOffset] _Decal4Tex          ("Decal 4 Texture", 2D) = "white" {}
+                        _Decal4Color        ("Decal 4 Color", Color) = (1,1,1,1)
+                        _Decal4PosX         ("Position X", Float) = 0.5
+                        _Decal4PosY         ("Position Y", Float) = 0.5
+                        _Decal4ScaleX       ("Scale X", Float) = 1
+                        _Decal4ScaleY       ("Scale Y", Float) = 1
+        [lilAngle]      _Decal4Angle        ("Angle", Float) = 0
+        [lilEnum]       _Decal4UVMode       ("UV Mode|UV0|UV1|UV2|UV3", Int) = 0
+        [lilEnum]       _Decal4BlendMode    ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
+        [lilEnum]       _Decal4Cull         ("Cull Mode|Off|Front|Back", Int) = 0
+        [lilEnum]       _Decal4Mirror       ("Mirror Mode|None|Left Only|Right Only|Symmetry Copy|Symmetry Copy (Flip)|Flip on Mirror", Int) = 0
 
-        [lilToggle]     _Decal5Enable              ("Decal 5 Enable", Int) = 0
-                        _Decal5Color               ("Decal 5 Color", Color) = (1,1,1,1)
-                        _Decal5Tex                 ("Decal 5 Texture", 2D) = "white" {}
-        [lilEnum]       _Decal5Tex_UVMode          ("UV Mode|UV0|UV1|UV2|UV3|MatCap", Int) = 0
-        [lilEnum]       _Decal5TexBlendMode        ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
-        [lilEnum]       _Decal5Tex_Cull            ("Cull Mode|Off|Front|Back", Int) = 0
-        [lilAngle]      _Decal5TexAngle            ("Angle", Float) = 0
-        [lilUVAnim]     _Decal5Tex_ScrollRotate    ("Scroll & Rotate", Vector) = (0,0,0,0)
-        [lilToggle]     _Decal5TexIsDecal          ("As Decal", Int) = 1
-        [lilToggle]     _Decal5TexIsLeftOnly       ("Left Only", Int) = 0
-        [lilToggle]     _Decal5TexIsRightOnly      ("Right Only", Int) = 0
-        [lilToggle]     _Decal5TexShouldCopy       ("Mirror Copy", Int) = 0
-        [lilToggle]     _Decal5TexShouldFlipMirror ("Flip Mirror", Int) = 0
-        [lilToggle]     _Decal5TexShouldFlipCopy   ("Flip Copy", Int) = 0
-        [lilToggle]     _Decal5TexIsMSDF           ("As MSDF", Int) = 0
+        [lilToggle]     _Decal5Enable       ("Decal 5 Enable", Int) = 0
+        [NoScaleOffset] _Decal5Tex          ("Decal 5 Texture", 2D) = "white" {}
+                        _Decal5Color        ("Decal 5 Color", Color) = (1,1,1,1)
+                        _Decal5PosX         ("Position X", Float) = 0.5
+                        _Decal5PosY         ("Position Y", Float) = 0.5
+                        _Decal5ScaleX       ("Scale X", Float) = 1
+                        _Decal5ScaleY       ("Scale Y", Float) = 1
+        [lilAngle]      _Decal5Angle        ("Angle", Float) = 0
+        [lilEnum]       _Decal5UVMode       ("UV Mode|UV0|UV1|UV2|UV3", Int) = 0
+        [lilEnum]       _Decal5BlendMode    ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
+        [lilEnum]       _Decal5Cull         ("Cull Mode|Off|Front|Back", Int) = 0
+        [lilEnum]       _Decal5Mirror       ("Mirror Mode|None|Left Only|Right Only|Symmetry Copy|Symmetry Copy (Flip)|Flip on Mirror", Int) = 0
 
-        [lilToggle]     _Decal6Enable              ("Decal 6 Enable", Int) = 0
-                        _Decal6Color               ("Decal 6 Color", Color) = (1,1,1,1)
-                        _Decal6Tex                 ("Decal 6 Texture", 2D) = "white" {}
-        [lilEnum]       _Decal6Tex_UVMode          ("UV Mode|UV0|UV1|UV2|UV3|MatCap", Int) = 0
-        [lilEnum]       _Decal6TexBlendMode        ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
-        [lilEnum]       _Decal6Tex_Cull            ("Cull Mode|Off|Front|Back", Int) = 0
-        [lilAngle]      _Decal6TexAngle            ("Angle", Float) = 0
-        [lilUVAnim]     _Decal6Tex_ScrollRotate    ("Scroll & Rotate", Vector) = (0,0,0,0)
-        [lilToggle]     _Decal6TexIsDecal          ("As Decal", Int) = 1
-        [lilToggle]     _Decal6TexIsLeftOnly       ("Left Only", Int) = 0
-        [lilToggle]     _Decal6TexIsRightOnly      ("Right Only", Int) = 0
-        [lilToggle]     _Decal6TexShouldCopy       ("Mirror Copy", Int) = 0
-        [lilToggle]     _Decal6TexShouldFlipMirror ("Flip Mirror", Int) = 0
-        [lilToggle]     _Decal6TexShouldFlipCopy   ("Flip Copy", Int) = 0
-        [lilToggle]     _Decal6TexIsMSDF           ("As MSDF", Int) = 0
+        [lilToggle]     _Decal6Enable       ("Decal 6 Enable", Int) = 0
+        [NoScaleOffset] _Decal6Tex          ("Decal 6 Texture", 2D) = "white" {}
+                        _Decal6Color        ("Decal 6 Color", Color) = (1,1,1,1)
+                        _Decal6PosX         ("Position X", Float) = 0.5
+                        _Decal6PosY         ("Position Y", Float) = 0.5
+                        _Decal6ScaleX       ("Scale X", Float) = 1
+                        _Decal6ScaleY       ("Scale Y", Float) = 1
+        [lilAngle]      _Decal6Angle        ("Angle", Float) = 0
+        [lilEnum]       _Decal6UVMode       ("UV Mode|UV0|UV1|UV2|UV3", Int) = 0
+        [lilEnum]       _Decal6BlendMode    ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
+        [lilEnum]       _Decal6Cull         ("Cull Mode|Off|Front|Back", Int) = 0
+        [lilEnum]       _Decal6Mirror       ("Mirror Mode|None|Left Only|Right Only|Symmetry Copy|Symmetry Copy (Flip)|Flip on Mirror", Int) = 0
+
+        //----------------------------------------------------------------------------------------------------------------------
+        // SimpleDecalEx: MatCap（全デカール表示領域の和集合に限定して合成する単一マットキャップ）
+        [lilToggle]     _SDEXMatCapEnable        ("MatCap Enable", Int) = 0
+        [NoScaleOffset] _SDEXMatCapTex           ("MatCap Texture", 2D) = "black" {}
+                        _SDEXMatCapColor         ("MatCap Color", Color) = (1,1,1,1)
+        [lilEnum]       _SDEXMatCapBlendMode     ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 1
+                        _SDEXMatCapShadowMask     ("Shadow Mask Strength", Range(0,1)) = 0
+                        _SDEXMatCapEnableLighting ("Enable Lighting", Range(0,1)) = 0
