@@ -13,7 +13,7 @@
         //   [Normal]        : テクスチャを法線マップとして扱う
         //   [HDR]           : カラーをHDR入力として扱う
         //
-        // SimpleDecalEx: デカール 6 枚。各セットは lilToon の lilGetSubTex デカール仕様に準拠する。
+        // SimpleDecalEx: デカール 8 枚。各セットは lilToon の lilGetSubTex デカール仕様に準拠する。
         //   配置は Position(中心UV) と Scale(UVサイズ) で指定し、custom.hlsl 側で _ST を組み立てる。
         //   ミラー/コピー/左右限定は _DecalNMirror の単一ドロップダウンで排他選択する。
         //   合成・表示はカスタムインスペクタ側で手動描画するため、ここでの属性は既定インスペクタ用の保険。
@@ -95,6 +95,32 @@
         [lilEnum]       _Decal6BlendMode    ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
         [lilEnum]       _Decal6Cull         ("Cull Mode|Off|Front|Back", Int) = 0
         [lilEnum]       _Decal6Mirror       ("Mirror Mode|None|Left Only|Right Only|Symmetry Copy|Symmetry Copy (Flip)|Flip on Mirror", Int) = 0
+
+        [lilToggle]     _Decal7Enable       ("Decal 7 Enable", Int) = 0
+        [NoScaleOffset] _Decal7Tex          ("Decal 7 Texture", 2D) = "white" {}
+                        _Decal7Color        ("Decal 7 Color", Color) = (1,1,1,1)
+                        _Decal7PosX         ("Position X", Float) = 0.5
+                        _Decal7PosY         ("Position Y", Float) = 0.5
+                        _Decal7ScaleX       ("Scale X", Float) = 1
+                        _Decal7ScaleY       ("Scale Y", Float) = 1
+        [lilAngle]      _Decal7Angle        ("Angle", Float) = 0
+        [lilEnum]       _Decal7UVMode       ("UV Mode|UV0|UV1|UV2|UV3", Int) = 0
+        [lilEnum]       _Decal7BlendMode    ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
+        [lilEnum]       _Decal7Cull         ("Cull Mode|Off|Front|Back", Int) = 0
+        [lilEnum]       _Decal7Mirror       ("Mirror Mode|None|Left Only|Right Only|Symmetry Copy|Symmetry Copy (Flip)|Flip on Mirror", Int) = 0
+
+        [lilToggle]     _Decal8Enable       ("Decal 8 Enable", Int) = 0
+        [NoScaleOffset] _Decal8Tex          ("Decal 8 Texture", 2D) = "white" {}
+                        _Decal8Color        ("Decal 8 Color", Color) = (1,1,1,1)
+                        _Decal8PosX         ("Position X", Float) = 0.5
+                        _Decal8PosY         ("Position Y", Float) = 0.5
+                        _Decal8ScaleX       ("Scale X", Float) = 1
+                        _Decal8ScaleY       ("Scale Y", Float) = 1
+        [lilAngle]      _Decal8Angle        ("Angle", Float) = 0
+        [lilEnum]       _Decal8UVMode       ("UV Mode|UV0|UV1|UV2|UV3", Int) = 0
+        [lilEnum]       _Decal8BlendMode    ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 0
+        [lilEnum]       _Decal8Cull         ("Cull Mode|Off|Front|Back", Int) = 0
+        [lilEnum]       _Decal8Mirror       ("Mirror Mode|None|Left Only|Right Only|Symmetry Copy|Symmetry Copy (Flip)|Flip on Mirror", Int) = 0
 
         //----------------------------------------------------------------------------------------------------------------------
         // SimpleDecalEx: MatCap（全デカール表示領域の和集合に限定して合成する単一マットキャップ）

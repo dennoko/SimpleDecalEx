@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace lilToon
 {
-    // SimpleDecalEx: lilToon のデカール仕様に準拠したデカールを 6 枚追加するカスタムシェーダー。
+    // SimpleDecalEx: lilToon のデカール仕様に準拠したデカールを 8 枚追加するカスタムシェーダー。
     // 名前の整合性（4 箇所）:
     //   1. この class 名 SimpleDecalExInspector
     //   2. 下の shaderName 定数 "dennokoworks/SimpleDecalEx"
@@ -15,7 +15,7 @@ namespace lilToon
     // EditorGUILayout.Popup で手動描画する（ドロワー経由だと選択できない不具合があるため）。
     public class SimpleDecalExInspector : lilToonInspector
     {
-        private const int DecalCount = 6;
+        private const int DecalCount = 8;
         private const string shaderName = "dennokoworks/SimpleDecalEx";
 
         private readonly MaterialProperty[] decalEnable    = new MaterialProperty[DecalCount];
