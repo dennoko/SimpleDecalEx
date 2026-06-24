@@ -4,19 +4,35 @@ using UnityEngine;
 
 namespace lilToon
 {
-    // シェーダー名の変更は以下 3 箇所をすべて揃えること:
-    //   1. この class 名（TemplateFullInspector → 任意名）
-    //   2. 下の shaderName 定数
-    //   3. Shaders/lilCustomShaderDatas.lilblock の ShaderName タグ・EditorName タグ
-    //   4. Editor/TemplateFull.asmdef の name フィールドとファイル名自体
-    public class TemplateFullInspector : lilToonInspector
+    // SimpleDecalEx: lilToon のデカール仕様に準拠したデカールを 6 枚追加するカスタムシェーダー。
+    // 名前の整合性（4 箇所）:
+    //   1. この class 名 SimpleDecalExInspector
+    //   2. 下の shaderName 定数 "dennokoworks/SimpleDecalEx"
+    //   3. Shaders/lilCustomShaderDatas.lilblock の ShaderName / EditorName タグ
+    //   4. Editor/SimpleDecalEx.asmdef の name フィールドとファイル名
+    public class SimpleDecalExInspector : lilToonInspector
     {
-        // Custom properties
-        // ここで MaterialProperty を宣言し、LoadCustomProperties() で FindProperty() する
-        //MaterialProperty customVariable;
+        private const int DecalCount = 6;
+
+        private readonly MaterialProperty[] decalEnable      = new MaterialProperty[DecalCount];
+        private readonly MaterialProperty[] decalColor       = new MaterialProperty[DecalCount];
+        private readonly MaterialProperty[] decalTex         = new MaterialProperty[DecalCount];
+        private readonly MaterialProperty[] decalUVMode      = new MaterialProperty[DecalCount];
+        private readonly MaterialProperty[] decalBlendMode   = new MaterialProperty[DecalCount];
+        private readonly MaterialProperty[] decalCull        = new MaterialProperty[DecalCount];
+        private readonly MaterialProperty[] decalAngle       = new MaterialProperty[DecalCount];
+        private readonly MaterialProperty[] decalScrollRotate= new MaterialProperty[DecalCount];
+        private readonly MaterialProperty[] decalIsDecal     = new MaterialProperty[DecalCount];
+        private readonly MaterialProperty[] decalLeftOnly    = new MaterialProperty[DecalCount];
+        private readonly MaterialProperty[] decalRightOnly   = new MaterialProperty[DecalCount];
+        private readonly MaterialProperty[] decalCopy        = new MaterialProperty[DecalCount];
+        private readonly MaterialProperty[] decalFlipMirror  = new MaterialProperty[DecalCount];
+        private readonly MaterialProperty[] decalFlipCopy    = new MaterialProperty[DecalCount];
+        private readonly MaterialProperty[] decalMSDF        = new MaterialProperty[DecalCount];
 
         private static bool isShowCustomProperties;
-        private const string shaderName = "TemplateFull";
+        private static readonly bool[] isShowDecal = new bool[DecalCount];
+        private const string shaderName = "dennokoworks/SimpleDecalEx";
 
         protected override void LoadCustomProperties(MaterialProperty[] props, Material material)
         {
@@ -26,43 +42,62 @@ namespace lilToon
             ReplaceToCustomShaders();
             isShowRenderMode = !material.shader.name.Contains("Optional");
 
-            // If not, set isShowRenderMode to false
-            //isShowRenderMode = false;
-
-            //LoadCustomLanguage("");
-            //customVariable = FindProperty("_CustomVariable", props);
+            for(int i = 0; i < DecalCount; i++)
+            {
+                int n = i + 1;
+                decalEnable[i]       = FindProperty("_Decal" + n + "Enable", props);
+                decalColor[i]        = FindProperty("_Decal" + n + "Color", props);
+                decalTex[i]          = FindProperty("_Decal" + n + "Tex", props);
+                decalUVMode[i]       = FindProperty("_Decal" + n + "Tex_UVMode", props);
+                decalBlendMode[i]    = FindProperty("_Decal" + n + "TexBlendMode", props);
+                decalCull[i]         = FindProperty("_Decal" + n + "Tex_Cull", props);
+                decalAngle[i]        = FindProperty("_Decal" + n + "TexAngle", props);
+                decalScrollRotate[i] = FindProperty("_Decal" + n + "Tex_ScrollRotate", props);
+                decalIsDecal[i]      = FindProperty("_Decal" + n + "TexIsDecal", props);
+                decalLeftOnly[i]     = FindProperty("_Decal" + n + "TexIsLeftOnly", props);
+                decalRightOnly[i]    = FindProperty("_Decal" + n + "TexIsRightOnly", props);
+                decalCopy[i]         = FindProperty("_Decal" + n + "TexShouldCopy", props);
+                decalFlipMirror[i]   = FindProperty("_Decal" + n + "TexShouldFlipMirror", props);
+                decalFlipCopy[i]     = FindProperty("_Decal" + n + "TexShouldFlipCopy", props);
+                decalMSDF[i]         = FindProperty("_Decal" + n + "TexIsMSDF", props);
+            }
         }
 
         protected override void DrawCustomProperties(Material material)
         {
-            // GUIStyles Name   Description
-            // ---------------- ------------------------------------
-            // boxOuter         outer box
-            // boxInnerHalf     inner box
-            // boxInner         inner box without label
-            // customBox        box (similar to unity default box)
-            // customToggleFont label for box
-            //
-            // Helper methods:
-            //   Foldout(label, key, isOpen)      : 折りたたみセクション（bool を返す）
-            //   DrawLine()                        : 区切り線
-            //   DrawWebButton(label, url)         : Web リンクボタン
-            //   LoadCustomLanguage(guid)          : 言語ファイル読み込み（Editor/lang_custom.txt の GUID）
-            //   m_MaterialEditor.ShaderProperty() : 通常プロパティの描画
-            //   m_MaterialEditor.TexturePropertySingleLine() : テクスチャ + インラインプロパティ
+            isShowCustomProperties = Foldout("SimpleDecalEx", "SimpleDecalEx", isShowCustomProperties);
+            if(!isShowCustomProperties) return;
 
-            isShowCustomProperties = Foldout("Custom Properties", "Custom Properties", isShowCustomProperties);
-            if(isShowCustomProperties)
+            EditorGUILayout.BeginVertical(boxOuter);
+
+            for(int i = 0; i < DecalCount; i++)
             {
-                EditorGUILayout.BeginVertical(boxOuter);
-                EditorGUILayout.LabelField(GetLoc("Custom Properties"), customToggleFont);
-                EditorGUILayout.BeginVertical(boxInnerHalf);
-
-                //m_MaterialEditor.ShaderProperty(customVariable, "Custom Variable");
-
-                EditorGUILayout.EndVertical();
-                EditorGUILayout.EndVertical();
+                int n = i + 1;
+                isShowDecal[i] = Foldout("Decal " + n, isShowDecal[i]);
+                if(isShowDecal[i])
+                {
+                    EditorGUILayout.BeginVertical(boxInner);
+                    m_MaterialEditor.ShaderProperty(decalEnable[i], "Enable");
+                    m_MaterialEditor.TexturePropertySingleLine(new GUIContent("Texture / Color"), decalTex[i], decalColor[i]);
+                    m_MaterialEditor.TextureScaleOffsetProperty(decalTex[i]);
+                    m_MaterialEditor.ShaderProperty(decalAngle[i], "Angle");
+                    m_MaterialEditor.ShaderProperty(decalScrollRotate[i], "Scroll & Rotate");
+                    m_MaterialEditor.ShaderProperty(decalUVMode[i], "UV Mode");
+                    m_MaterialEditor.ShaderProperty(decalBlendMode[i], "Blend Mode");
+                    m_MaterialEditor.ShaderProperty(decalCull[i], "Cull Mode");
+                    DrawLine();
+                    m_MaterialEditor.ShaderProperty(decalIsDecal[i], "As Decal");
+                    m_MaterialEditor.ShaderProperty(decalLeftOnly[i], "Left Only");
+                    m_MaterialEditor.ShaderProperty(decalRightOnly[i], "Right Only");
+                    m_MaterialEditor.ShaderProperty(decalCopy[i], "Mirror Copy");
+                    m_MaterialEditor.ShaderProperty(decalFlipMirror[i], "Flip Mirror");
+                    m_MaterialEditor.ShaderProperty(decalFlipCopy[i], "Flip Copy");
+                    m_MaterialEditor.ShaderProperty(decalMSDF[i], "As MSDF");
+                    EditorGUILayout.EndVertical();
+                }
             }
+
+            EditorGUILayout.EndVertical();
         }
 
         protected override void ReplaceToCustomShaders()
@@ -129,23 +164,6 @@ namespace lilToon
             ltsmfur     = Shader.Find("Hidden/" + shaderName + "/MultiFur");
             ltsmgem     = Shader.Find("Hidden/" + shaderName + "/MultiGem");
         }
-
-        // You can create a menu like this
-        /*
-        [MenuItem("Assets/TemplateFull/Convert material to custom shader", false, 1100)]
-        private static void ConvertMaterialToCustomShaderMenu()
-        {
-            if(Selection.objects.Length == 0) return;
-            TemplateFullInspector inspector = new TemplateFullInspector();
-            for(int i = 0; i < Selection.objects.Length; i++)
-            {
-                if(Selection.objects[i] is Material)
-                {
-                    inspector.ConvertMaterialToCustomShader((Material)Selection.objects[i]);
-                }
-            }
-        }
-        */
     }
 }
 #endif

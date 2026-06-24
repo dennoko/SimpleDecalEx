@@ -1,5 +1,5 @@
 {
-    "name": "TemplateFull",
+    "name": "SimpleDecalEx",
     "rootNamespace": "",
     "references": [
         "lilToon.Editor"
