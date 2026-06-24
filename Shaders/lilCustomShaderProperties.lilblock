@@ -102,5 +102,6 @@
         [NoScaleOffset] _SDEXMatCapTex           ("MatCap Texture", 2D) = "black" {}
                         _SDEXMatCapColor         ("MatCap Color", Color) = (1,1,1,1)
         [lilEnum]       _SDEXMatCapBlendMode     ("Blend Mode|Normal|Add|Screen|Multiply", Int) = 1
+                        _SDEXMatCapOpacity        ("Opacity", Range(0,1)) = 1
                         _SDEXMatCapShadowMask     ("Shadow Mask Strength", Range(0,1)) = 0
                         _SDEXMatCapEnableLighting ("Enable Lighting", Range(0,1)) = 0

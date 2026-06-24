@@ -36,6 +36,7 @@ namespace lilToon
         private MaterialProperty matcapTex;
         private MaterialProperty matcapColor;
         private MaterialProperty matcapBlendMode;
+        private MaterialProperty matcapOpacity;
         private MaterialProperty matcapShadowMask;
         private MaterialProperty matcapEnableLighting;
 
@@ -87,6 +88,7 @@ namespace lilToon
             matcapTex            = FindProperty("_SDEXMatCapTex", props);
             matcapColor          = FindProperty("_SDEXMatCapColor", props);
             matcapBlendMode      = FindProperty("_SDEXMatCapBlendMode", props);
+            matcapOpacity        = FindProperty("_SDEXMatCapOpacity", props);
             matcapShadowMask     = FindProperty("_SDEXMatCapShadowMask", props);
             matcapEnableLighting = FindProperty("_SDEXMatCapEnableLighting", props);
         }
@@ -138,6 +140,7 @@ namespace lilToon
                 {
                     m_MaterialEditor.TexturePropertySingleLine(new GUIContent(L("Texture / Color", "テクスチャ / 色")), matcapTex, matcapColor);
                     DrawPopup(matcapBlendMode, L("Blend Mode", "合成モード"), BlendModeOptions);
+                    m_MaterialEditor.ShaderProperty(matcapOpacity, new GUIContent(L("Opacity", "不透明度"), L("Overall MatCap opacity", "MatCap全体の不透明度")));
                     m_MaterialEditor.ShaderProperty(matcapEnableLighting, new GUIContent(L("Enable Lighting", "ライティング反映"), L("0 = unlit overlay, 1 = follow surface shading", "0=陰影なしのオーバーレイ / 1=陰影に追従")));
                     m_MaterialEditor.ShaderProperty(matcapShadowMask, new GUIContent(L("Shadow Mask", "影マスク"), L("Attenuate MatCap in shadowed areas (1 = hidden in shadow)", "影部分でMatCapを減衰（1で影では非表示）")));
                 }

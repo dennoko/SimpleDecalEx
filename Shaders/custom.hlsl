@@ -75,6 +75,7 @@
     float4 _SDEXMatCapColor;          \
     uint   _SDEXMatCapEnable;         \
     uint   _SDEXMatCapBlendMode;      \
+    float  _SDEXMatCapOpacity;        \
     float  _SDEXMatCapShadowMask;     \
     float  _SDEXMatCapEnableLighting;
 
@@ -216,7 +217,7 @@
     { \
         float3 sdexMat = _SDEXMatCapColor.rgb * LIL_SAMPLE_2D(_SDEXMatCapTex, lil_sampler_linear_repeat, fd.uvMat).rgb; \
         sdexMat = lerp(sdexMat, sdexMat * fd.lightColor, _SDEXMatCapEnableLighting); \
-        float sdexMatMask = sdexCoverage * _SDEXMatCapColor.a * lerp(1.0, fd.shadowmix, _SDEXMatCapShadowMask); \
+        float sdexMatMask = sdexCoverage * _SDEXMatCapColor.a * _SDEXMatCapOpacity * lerp(1.0, fd.shadowmix, _SDEXMatCapShadowMask); \
         fd.col.rgb = lilBlendColor(fd.col.rgb, sdexMat, sdexMatMask, _SDEXMatCapBlendMode); \
     }
 
