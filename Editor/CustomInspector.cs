@@ -41,9 +41,14 @@ namespace lilToon
         private MaterialProperty matcapShadowMask;
         private MaterialProperty matcapEnableLighting;
 
+        // Decal Sticker（半透明マテリアルでデカール部分を不透明化）
+        private MaterialProperty alphaOverrideEnable;
+        private MaterialProperty alphaOverrideStrength;
+
         private static bool isShowCustomProperties;
         private static readonly bool[] isShowDecal = new bool[DecalCount];
         private static bool isShowMatCap;
+        private static bool isShowSticker;
 
         //----------------------------------------------------------------------------------------------------------------------
         // Localization
@@ -93,6 +98,8 @@ namespace lilToon
             matcapMainStrength   = FindProperty("_SDEXMatCapMainStrength", props);
             matcapShadowMask     = FindProperty("_SDEXMatCapShadowMask", props);
             matcapEnableLighting = FindProperty("_SDEXMatCapEnableLighting", props);
+            alphaOverrideEnable   = FindProperty("_SDEXAlphaOverrideEnable", props);
+            alphaOverrideStrength = FindProperty("_SDEXAlphaOverrideStrength", props);
         }
 
         protected override void DrawCustomProperties(Material material)
@@ -146,6 +153,24 @@ namespace lilToon
                     m_MaterialEditor.ShaderProperty(matcapMainStrength, new GUIContent(L("Main Color Power", "メインカラー強度"), L("Tint the MatCap by the surface main color (0 = none, 1 = full multiply)", "MatCapの色を表面のメインカラーで染める（0=なし / 1=完全乗算）")));
                     m_MaterialEditor.ShaderProperty(matcapEnableLighting, new GUIContent(L("Enable Lighting", "ライティング反映"), L("0 = unlit overlay, 1 = follow surface shading", "0=陰影なしのオーバーレイ / 1=陰影に追従")));
                     m_MaterialEditor.ShaderProperty(matcapShadowMask, new GUIContent(L("Shadow Mask", "影マスク"), L("Attenuate MatCap in shadowed areas (1 = hidden in shadow)", "影部分でMatCapを減衰（1で影では非表示）")));
+                }
+                EditorGUILayout.EndVertical();
+            }
+
+            isShowSticker = Foldout(L("Decal Sticker (Transparent)", "デカールのステッカー化（半透明用）"), isShowSticker);
+            if(isShowSticker)
+            {
+                EditorGUILayout.BeginVertical(boxInner);
+                EditorGUILayout.HelpBox(
+                    L("Forces decal areas opaque on Transparent materials (sticker on glass). No effect on Opaque/Cutout.",
+                      "半透明マテリアルでデカール部分を不透明化します（ガラス面のシール表現）。不透明/カットアウトでは無効。"),
+                    MessageType.Info);
+                DrawToggle(alphaOverrideEnable, L("Enable", "有効"));
+                if(alphaOverrideEnable.floatValue > 0.5f)
+                {
+                    m_MaterialEditor.ShaderProperty(alphaOverrideStrength,
+                        new GUIContent(L("Strength", "強度"),
+                            L("1 = fully opaque in decal areas", "1でデカール部分を完全に不透明化")));
                 }
                 EditorGUILayout.EndVertical();
             }

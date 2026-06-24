@@ -78,7 +78,9 @@
     float  _SDEXMatCapOpacity;        \
     float  _SDEXMatCapMainStrength;   \
     float  _SDEXMatCapShadowMask;     \
-    float  _SDEXMatCapEnableLighting;
+    float  _SDEXMatCapEnableLighting; \
+    uint   _SDEXAlphaOverrideEnable;  \
+    float  _SDEXAlphaOverrideStrength;
 
 // Custom textures
 // SimpleDecalEx: デカール 6 枚ぶんのテクスチャ。SAMPLER は新規に持たず、
@@ -200,7 +202,8 @@
     LIL_SDEX_APPLY(3) \
     LIL_SDEX_APPLY(4) \
     LIL_SDEX_APPLY(5) \
-    LIL_SDEX_APPLY(6)
+    LIL_SDEX_APPLY(6) \
+    if(_SDEXAlphaOverrideEnable) fd.col.a = lerp(fd.col.a, max(fd.col.a, sdexCoverage), sdexCoverage * _SDEXAlphaOverrideStrength);
 
 // SimpleDecalEx: MatCap 合成。
 // フック選定理由（BEFORE_EMISSION_1ST）:

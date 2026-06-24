@@ -161,6 +161,8 @@ UI 例:
    Shadow Mask を上げても減衰しないが、これは「影が無いマテリアル」として自然な挙動。
 4. **デカール UV モードの MatCap 廃止**: 旧 UV モードの「MatCap」選択肢は削除済み。本 MatCap 機能のみで提供する。
 5. **透過マテリアル**: MatCap は `fd.col.rgb` のみ変更しアルファは触らない。デカール透過の見え方を変えない。
+   なお、別系統の「デカールのステッカー化」機能（`_SDEXAlphaOverrideEnable`）は `BEFORE_SHADOW`
+   （プリマルチプライ前）で `fd.col.a` をデカール領域だけ不透明側（`max`）へ引き上げる。Transparent モード専用。
 
 ---
 

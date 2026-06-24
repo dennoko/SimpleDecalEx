@@ -106,3 +106,8 @@
                         _SDEXMatCapMainStrength   ("Main Color Power", Range(0,1)) = 0
                         _SDEXMatCapShadowMask     ("Shadow Mask Strength", Range(0,1)) = 0.6
                         _SDEXMatCapEnableLighting ("Enable Lighting", Range(0,1)) = 0.8
+
+        //----------------------------------------------------------------------------------------------------------------------
+        // SimpleDecalEx: デカール領域のアルファ上書き（半透明マテリアルでデカール部分を不透明化＝ステッカー表現）
+        [lilToggle]     _SDEXAlphaOverrideEnable    ("Decal Sticker (Opaque)", Int) = 0
+                        _SDEXAlphaOverrideStrength  ("Strength", Range(0,1)) = 1
