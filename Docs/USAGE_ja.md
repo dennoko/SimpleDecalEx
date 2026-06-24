@@ -1,8 +1,7 @@
 # SimpleDecalEx使い方
 
 ## シェーダーの切り替え
-
-
+シェーダー一覧から **dennokoworks/SimpleDecalEx** を選択してください。
 
 ## SimpleDecalEx パラメーター説明
 
