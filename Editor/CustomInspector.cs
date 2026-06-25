@@ -75,6 +75,24 @@ namespace lilToon
             ? new[] { "なし", "左のみ", "右のみ", "左右対称コピー", "左右対称コピー(反転)", "ミラーで反転" }
             : new[] { "None", "Left Only", "Right Only", "Symmetry Copy", "Symmetry Copy (Flip)", "Flip on Mirror" };
 
+        private static string[] MirrorTooltips => IsJapanese
+            ? new[] {
+                "なし: ミラー処理を行いません。",
+                "左のみ: モデルの左側（X < 0.5）にのみ表示します。左右共有UVで左側だけに表示したい場合に使用します。",
+                "右のみ: モデルの右側（X >= 0.5）にのみ表示します。左右共有UVで右側だけに表示したい場合に使用します。",
+                "左右対称コピー: 左右両側に同じ向き（反転なし）でコピーして表示します。文字など反転させたくない場合に使用します。",
+                "左右対称コピー(反転): 左右両側に表示し、片方を水平反転したコピーにします。翼や模様など左右対称にしたい場合に使用します。",
+                "ミラーで反転: 右半分（X >= 0.5）でのみデカールを水平反転します。左右共有UVでの反転を補正する場合に使用します。"
+            }
+            : new[] {
+                "None: Do not apply mirror processing.",
+                "Left Only: Display only on the left side (X < 0.5) of the model. Use for symmetrical UVs to display on the left side only.",
+                "Right Only: Display only on the right side (X >= 0.5) of the model. Use for symmetrical UVs to display on the right side only.",
+                "Symmetry Copy: Copy and display the decal on both sides in the same direction. Use when you do not want to flip text, etc.",
+                "Symmetry Copy (Flip): Display on both sides, with one side as a horizontally flipped copy. Use for symmetrical patterns like wings.",
+                "Flip on Mirror: Flip the decal horizontally only on the right side (X >= 0.5) of the model. Use to correct flipping on symmetrical UVs."
+            };
+
         private static readonly int[]    MaskSizeValues  = { 128, 256, 512, 1024, 2048, 4096 };
         private static readonly string[] MaskSizeOptions = { "128", "256", "512", "1024", "2048", "4096" };
         private static string[] MaskAlphaModeOptions => IsJapanese
@@ -132,21 +150,24 @@ namespace lilToon
 
                 EditorGUILayout.BeginVertical(boxInner);
 
-                DrawToggle(decalEnable[i], L("Enable", "有効"));
-                m_MaterialEditor.TexturePropertySingleLine(new GUIContent(L("Texture / Color", "テクスチャ / 色")), decalTex[i], decalColor[i]);
+                DrawToggle(decalEnable[i], L("Enable", "有効"), L("Enable or disable this decal slot.", "このデカールスロットの有効・無効を切り替えます。"));
+                m_MaterialEditor.TexturePropertySingleLine(
+                    new GUIContent(L("Texture / Color", "テクスチャ / 色"), L("Select decal texture and color tint.", "デカールのテクスチャとカラーティントを設定します。")), 
+                    decalTex[i], decalColor[i]
+                );
 
                 DrawSubHeader(L("Placement", "配置"));
-                DrawSlider(decalPosX[i],   L("Position X", "位置 X"), -1f, 1f);
-                DrawSlider(decalPosY[i],   L("Position Y", "位置 Y"), -1f, 1f);
-                DrawSlider(decalScaleX[i], L("Scale X", "スケール X"), 0f, 1f);
-                DrawSlider(decalScaleY[i], L("Scale Y", "スケール Y"), 0f, 1f);
-                m_MaterialEditor.ShaderProperty(decalAngle[i],  L("Angle", "角度"));
-                DrawPopup(decalUVMode[i], L("UV Mode", "UV モード"), UVModeOptions);
-                DrawPopup(decalMirror[i], L("Mirror Mode", "ミラー"), MirrorOptions);
+                DrawSlider(decalPosX[i],   L("Position X", "位置 X"), -1f, 1f, L("Horizontal position of the decal on UV space.", "UV空間上でのデカールの横方向の位置。"));
+                DrawSlider(decalPosY[i],   L("Position Y", "位置 Y"), -1f, 1f, L("Vertical position of the decal on UV space.", "UV空間上でのデカールの縦方向の位置。"));
+                DrawSlider(decalScaleX[i], L("Scale X", "スケール X"), 0f, 1f, L("Horizontal scale of the decal.", "デカールの横方向の大きさ。"));
+                DrawSlider(decalScaleY[i], L("Scale Y", "スケール Y"), 0f, 1f, L("Vertical scale of the decal.", "デカールの縦方向の大きさ。"));
+                m_MaterialEditor.ShaderProperty(decalAngle[i], new GUIContent(L("Angle", "角度"), L("Rotation angle of the decal (in degrees).", "デカールの回転角度。")));
+                DrawPopup(decalUVMode[i], L("UV Mode", "UV モード"), UVModeOptions, L("Select UV channel for mapping.", "デカールをマッピングするUVチャンネルを選択します。"));
+                DrawPopup(decalMirror[i], new GUIContent(L("Mirror Mode", "ミラー"), L("Select mirror behavior for symmetrical/asymmetrical UV mapping.", "デカールの複製や左右の反転などの挙動を設定します。")), MirrorOptions, MirrorTooltips);
 
                 DrawSubHeader(L("Blending", "合成"));
-                DrawPopup(decalBlendMode[i], L("Blend Mode", "合成モード"), BlendModeOptions);
-                DrawPopup(decalCull[i],      L("Cull Mode", "表示面"), CullOptions);
+                DrawPopup(decalBlendMode[i], L("Blend Mode", "合成モード"), BlendModeOptions, L("Blend mode for combining the decal color.", "デカールを下地と合成する際のブレンドモード。"));
+                DrawPopup(decalCull[i],      L("Cull Mode", "表示面"), CullOptions, L("Decide whether to show on Front, Back, or Both sides.", "デカールをポリゴンの表面、裏面、または両面に表示するかを選択します。"));
 
                 EditorGUILayout.EndVertical();
                 DrawCoordPickerSection(material, i);
@@ -419,7 +440,12 @@ namespace lilToon
             EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
         }
 
-        private void DrawToggle(MaterialProperty prop, string label)
+        private void DrawToggle(MaterialProperty prop, string label, string tooltip = null)
+        {
+            DrawToggle(prop, new GUIContent(label, tooltip));
+        }
+
+        private void DrawToggle(MaterialProperty prop, GUIContent label)
         {
             EditorGUI.showMixedValue = prop.hasMixedValue;
             EditorGUI.BeginChangeCheck();
@@ -428,18 +454,34 @@ namespace lilToon
             EditorGUI.showMixedValue = false;
         }
 
-        // enum を Popup で手動描画する。lilEnum ドロワー経由だと選択できない不具合を回避するため。
-        private void DrawPopup(MaterialProperty prop, string label, string[] options)
+        private void DrawPopup(MaterialProperty prop, string label, string[] options, string tooltip = null)
         {
+            DrawPopup(prop, new GUIContent(label, tooltip), options);
+        }
+
+        private void DrawPopup(MaterialProperty prop, GUIContent label, string[] options, string[] tooltips = null)
+        {
+            GUIContent[] guiOptions = new GUIContent[options.Length];
+            for (int i = 0; i < options.Length; i++)
+            {
+                string t = (tooltips != null && i < tooltips.Length) ? tooltips[i] : null;
+                guiOptions[i] = new GUIContent(options[i], t);
+            }
+
             int index = Mathf.Clamp((int)(prop.floatValue + 0.5f), 0, options.Length - 1);
             EditorGUI.showMixedValue = prop.hasMixedValue;
             EditorGUI.BeginChangeCheck();
-            index = EditorGUILayout.Popup(label, index, options);
+            index = EditorGUILayout.Popup(label, index, guiOptions);
             if(EditorGUI.EndChangeCheck()) prop.floatValue = index;
             EditorGUI.showMixedValue = false;
         }
 
-        private void DrawSlider(MaterialProperty prop, string label, float min, float max)
+        private void DrawSlider(MaterialProperty prop, string label, float min, float max, string tooltip = null)
+        {
+            DrawSlider(prop, new GUIContent(label, tooltip), min, max);
+        }
+
+        private void DrawSlider(MaterialProperty prop, GUIContent label, float min, float max)
         {
             EditorGUI.showMixedValue = prop.hasMixedValue;
             EditorGUI.BeginChangeCheck();

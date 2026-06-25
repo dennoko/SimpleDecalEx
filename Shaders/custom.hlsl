@@ -144,19 +144,32 @@
         else if(sdexUVMode == 3) sdexUV = fd.uv3; \
         float2 sdexScale = max(abs(float2(_Decal##idx##ScaleX, _Decal##idx##ScaleY)), 1e-4); \
         float2 sdexPos   = float2(_Decal##idx##PosX, _Decal##idx##PosY); \
-        float4 sdexST    = float4(1.0 / sdexScale, 0.5 - sdexPos / sdexScale); \
-        float sdexCosA, sdexSinA; \
-        sincos(_Decal##idx##Angle, sdexCosA, sdexSinA); \
-        float2 sdexDelta = sdexUV - sdexPos; \
-        sdexUV = sdexPos + float2(sdexDelta.x * sdexCosA - sdexDelta.y * sdexSinA, \
-                                   sdexDelta.x * sdexSinA + sdexDelta.y * sdexCosA); \
         uint sdexMir = _Decal##idx##Mirror; \
         bool sdexLeftOnly  = sdexMir == 1; \
         bool sdexRightOnly = sdexMir == 2; \
         bool sdexCopy      = sdexMir == 3 || sdexMir == 4; \
         bool sdexFlipCopy  = sdexMir == 4; \
         bool sdexFlipMir   = sdexMir == 5; \
-        bool sdexIsRight = (fd.uv0.x >= 0.5); \
+        bool sdexIsRight   = (fd.uv0.x >= 0.5); \
+        /* lilCalcDecalUV のコピー折り畳みは abs(x-0.5)+0.5 で常に右半分へ写す。 \
+           デカールが左半分 (posX<0.5) にある場合は ST 位置を右半分へミラーし、 \
+           コピー側ピクセルの回転中心もコピー中心へ切り替える。 */ \
+        float2 sdexRotCenter = sdexPos; \
+        float2 sdexPosForST  = sdexPos; \
+        if(sdexCopy) { \
+            bool sdexDecalOnRight = (sdexPos.x >= 0.5); \
+            if(sdexDecalOnRight != sdexIsRight) \
+                sdexRotCenter = float2(1.0 - sdexPos.x, sdexPos.y); \
+            if(!sdexDecalOnRight) \
+                sdexPosForST.x = 1.0 - sdexPos.x; \
+        } \
+        float4 sdexST    = float4(1.0 / sdexScale, 0.5 - sdexPosForST / sdexScale); \
+        float sdexCosA, sdexSinA; \
+        sincos(_Decal##idx##Angle, sdexCosA, sdexSinA); \
+        float2 sdexDelta = sdexUV - sdexRotCenter; \
+        sdexUV = sdexRotCenter + float2(sdexDelta.x * sdexCosA - sdexDelta.y * sdexSinA, \
+                                        sdexDelta.x * sdexSinA + sdexDelta.y * sdexCosA); \
+        if(sdexCopy && sdexPos.x < 0.5) sdexUV.x = 1.0 - sdexUV.x; \
         float4 sdexCol = _Decal##idx##Color * lilGetSubTex( \
             _Decal##idx##Tex, sdexST, float4(0,0,0,0), 0.0, sdexUV, fd.nv, \
             true, sdexLeftOnly, sdexRightOnly, sdexCopy, sdexFlipMir, sdexFlipCopy, false, sdexIsRight, \
