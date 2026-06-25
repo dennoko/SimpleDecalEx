@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -49,6 +50,12 @@ namespace lilToon
         private static readonly bool[] isShowDecal = new bool[DecalCount];
         private static bool isShowMatCap;
         private static bool isShowSticker;
+        private static bool isShowMaskExport;
+        private static int  maskResolutionIdx = 2; // default = 512
+        private static int  maskUVChannel;
+        private static string maskOutputDir = "Assets/DecalMask/";
+        private static bool maskOverwrite;
+        private static int  maskAlphaMode; // 0=Binary, 1=Linear
 
         //----------------------------------------------------------------------------------------------------------------------
         // Localization
@@ -65,6 +72,12 @@ namespace lilToon
         private static string[] MirrorOptions => IsJapanese
             ? new[] { "なし", "左のみ", "右のみ", "左右対称コピー", "左右対称コピー(反転)", "ミラーで反転" }
             : new[] { "None", "Left Only", "Right Only", "Symmetry Copy", "Symmetry Copy (Flip)", "Flip on Mirror" };
+
+        private static readonly int[]    MaskSizeValues  = { 128, 256, 512, 1024, 2048, 4096 };
+        private static readonly string[] MaskSizeOptions = { "128", "256", "512", "1024", "2048", "4096" };
+        private static string[] MaskAlphaModeOptions => IsJapanese
+            ? new[] { "二値（完全透明かどうか）", "リニア（アルファ値に比例）" }
+            : new[] { "Binary (transparent or not)", "Linear (proportional to alpha)" };
 
         protected override void LoadCustomProperties(MaterialProperty[] props, Material material)
         {
@@ -175,7 +188,223 @@ namespace lilToon
                 EditorGUILayout.EndVertical();
             }
 
+            DrawMaskExportSection(material);
+
             EditorGUILayout.EndVertical();
+        }
+
+        //----------------------------------------------------------------------------------------------------------------------
+        // Mask Export
+
+        private void DrawMaskExportSection(Material material)
+        {
+            isShowMaskExport = Foldout(L("Mask Export", "マスク書き出し"), isShowMaskExport);
+            if(!isShowMaskExport) return;
+
+            EditorGUILayout.BeginVertical(boxInner);
+            EditorGUILayout.HelpBox(
+                L("Exports the union of all enabled decal footprints as a grayscale mask. Both normal and inverted (_invert) versions are saved.",
+                  "有効な全デカールフットプリントの和集合をグレースケールマスクとして書き出します。通常版と反転版（_invert）が同時に保存されます。"),
+                MessageType.Info);
+
+            maskResolutionIdx = EditorGUILayout.Popup(L("Resolution", "解像度"),          maskResolutionIdx, MaskSizeOptions);
+            maskUVChannel     = EditorGUILayout.Popup(L("UV Channel", "UV チャンネル"),   maskUVChannel,     UVModeOptions);
+            maskAlphaMode     = EditorGUILayout.Popup(L("Alpha Mode", "アルファモード"), maskAlphaMode,     MaskAlphaModeOptions);
+            maskOutputDir     = EditorGUILayout.TextField(L("Output Directory", "出力先ディレクトリ"), maskOutputDir);
+            maskOverwrite     = EditorGUILayout.Toggle(L("Overwrite Existing", "上書き"), maskOverwrite);
+
+            EditorGUILayout.Space(4f);
+            if(GUILayout.Button(L("Export Decal Mask", "デカールマスクを書き出し")))
+                ExportDecalMask(material);
+
+            EditorGUILayout.EndVertical();
+        }
+
+        private void ExportDecalMask(Material material)
+        {
+            int size = MaskSizeValues[maskResolutionIdx];
+
+            // 対象デカールを収集し、サンプリング可能なテクスチャを用意
+            int[]       activeIdx = new int[DecalCount];
+            Texture2D[] readTex   = new Texture2D[DecalCount];
+            int activeCount = 0;
+            for(int i = 0; i < DecalCount; i++)
+            {
+                if(decalEnable[i].floatValue < 0.5f) continue;
+                if(Mathf.RoundToInt(decalUVMode[i].floatValue) != maskUVChannel) continue;
+                activeIdx[activeCount] = i;
+                readTex[activeCount]   = GetReadableCopy(decalTex[i].textureValue as Texture2D);
+                activeCount++;
+            }
+
+            var pixels = new Color32[size * size];
+            try
+            {
+                for(int py = 0; py < size; py++)
+                {
+                    if(size > 512 && py % 64 == 0)
+                        EditorUtility.DisplayProgressBar(
+                            L("Exporting Decal Mask", "デカールマスク書き出し中"),
+                            py + " / " + size, (float)py / size);
+
+                    float v = (py + 0.5f) / size;
+                    for(int px = 0; px < size; px++)
+                    {
+                        float u        = (px + 0.5f) / size;
+                        float maxAlpha = 0f;
+                        for(int k = 0; k < activeCount; k++)
+                        {
+                            int di = activeIdx[k];
+                            float a = SampleDecalAlpha(u, v,
+                                decalPosX[di].floatValue,   decalPosY[di].floatValue,
+                                decalScaleX[di].floatValue, decalScaleY[di].floatValue,
+                                decalAngle[di].floatValue,
+                                Mathf.RoundToInt(decalMirror[di].floatValue),
+                                readTex[k], decalColor[di].colorValue.a);
+                            if(a > maxAlpha) maxAlpha = a;
+                        }
+                        byte c = maskAlphaMode == 0
+                            ? (maxAlpha > 0f ? (byte)255 : (byte)0)
+                            : (byte)Mathf.RoundToInt(Mathf.Clamp01(maxAlpha) * 255f);
+                        pixels[py * size + px] = new Color32(c, c, c, 255);
+                    }
+                }
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+                for(int k = 0; k < activeCount; k++)
+                {
+                    var orig = decalTex[activeIdx[k]].textureValue as Texture2D;
+                    if(readTex[k] != null && readTex[k] != orig)
+                        Object.DestroyImmediate(readTex[k]);
+                }
+            }
+
+            string baseName  = SanitizeFileName(material.name) + "_DecalMask";
+            string savedPath = SaveMaskTexture(pixels, size, baseName, "");
+            for(int k = 0; k < pixels.Length; k++)
+            {
+                byte ic = (byte)(255 - pixels[k].r);
+                pixels[k] = new Color32(ic, ic, ic, 255);
+            }
+            SaveMaskTexture(pixels, size, baseName, "_invert");
+
+            AssetDatabase.Refresh();
+
+            // 保存先フォルダをプロジェクトタブで開く
+            string dir       = NormalizeDir(maskOutputDir);
+            var folderAsset  = AssetDatabase.LoadAssetAtPath<Object>(dir);
+            if(folderAsset != null)
+            {
+                EditorUtility.FocusProjectWindow();
+                Selection.activeObject = folderAsset;
+                EditorGUIUtility.PingObject(folderAsset);
+            }
+            Debug.Log("[SimpleDecalEx] Decal mask exported to: " + dir);
+        }
+
+        private static string SaveMaskTexture(Color32[] pixels, int size, string baseName, string suffix)
+        {
+            var tex = new Texture2D(size, size, TextureFormat.RGB24, false);
+            tex.SetPixels32(pixels);
+            tex.Apply();
+            byte[] png = tex.EncodeToPNG();
+            Object.DestroyImmediate(tex);
+
+            string dir    = NormalizeDir(maskOutputDir);
+            string absDir = Path.GetFullPath(Path.Combine(Application.dataPath, "..", dir));
+            Directory.CreateDirectory(absDir);
+
+            string fileName = baseName + suffix + ".png";
+            string absPath  = Path.Combine(absDir, fileName);
+
+            if(!maskOverwrite && File.Exists(absPath))
+            {
+                int n = 1;
+                do
+                {
+                    fileName = baseName + suffix + " " + n + ".png";
+                    absPath  = Path.Combine(absDir, fileName);
+                    n++;
+                } while(File.Exists(absPath));
+            }
+
+            File.WriteAllBytes(absPath, png);
+            string assetPath = dir + "/" + fileName;
+            AssetDatabase.ImportAsset(assetPath);
+
+            var importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+            if(importer != null)
+            {
+                importer.sRGBTexture         = false;
+                importer.textureCompression  = TextureImporterCompression.Uncompressed;
+                importer.SaveAndReimport();
+            }
+            return assetPath;
+        }
+
+        private static string NormalizeDir(string dir)
+        {
+            dir = dir.Replace('\\', '/').TrimEnd('/');
+            if(!dir.StartsWith("Assets/") && dir != "Assets")
+                dir = "Assets/" + dir.TrimStart('/');
+            return dir;
+        }
+
+        private static string SanitizeFileName(string name)
+        {
+            return string.Concat(name.Split(Path.GetInvalidFileNameChars()));
+        }
+
+        // 非Readableテクスチャを RenderTexture 経由でCPU読み取り可能なコピーに変換する。
+        // 元から isReadable な場合はそのまま返す（コピーなし）。
+        private static Texture2D GetReadableCopy(Texture2D src)
+        {
+            if(src == null) return null;
+            if(src.isReadable) return src;
+            var rt   = RenderTexture.GetTemporary(src.width, src.height, 0, RenderTextureFormat.ARGB32);
+            var prev = RenderTexture.active;
+            Graphics.Blit(src, rt);
+            RenderTexture.active = rt;
+            var copy = new Texture2D(src.width, src.height, TextureFormat.RGBA32, false);
+            copy.ReadPixels(new Rect(0, 0, src.width, src.height), 0, 0);
+            copy.Apply();
+            RenderTexture.active = prev;
+            RenderTexture.ReleaseTemporary(rt);
+            return copy;
+        }
+
+        // デカール1枚のUV(u,v)におけるアルファ値を返す（範囲外・フィルタ後に0）。
+        // ミラー変換(UV空間x方向) → ST変換 → 回転 の順で適用し、テクスチャアルファ×カラーアルファを返す。
+        private static float SampleDecalAlpha(float u, float v, float posX, float posY, float scaleX, float scaleY, float angle, int mirror, Texture2D tex, float colorAlpha)
+        {
+            if(scaleX <= 0f || scaleY <= 0f) return 0f;
+
+            float testU = u;
+            switch(mirror)
+            {
+                case 1: if(u >= 0.5f) return 0f; break;                  // Left Only
+                case 2: if(u <  0.5f) return 0f; break;                  // Right Only
+                case 3: case 4: testU = u >= 0.5f ? 1f - u : u; break;  // Symmetry Copy
+                // 0=None, 5=Flip on Mirror → use u as-is
+            }
+
+            // ST変換: メッシュUV → デカールテクスチャUV空間（中心0.5,0.5）
+            float du = (testU - posX) / scaleX;
+            float dv = (v     - posY) / scaleY;
+
+            // デカールテクスチャ空間内で(0.5,0.5)中心に回転
+            float rad    = angle * Mathf.Deg2Rad;
+            float cosA   = Mathf.Cos(rad);
+            float sinA   = Mathf.Sin(rad);
+            float uDecal = 0.5f + du * cosA - dv * sinA;
+            float vDecal = 0.5f + du * sinA + dv * cosA;
+
+            if(uDecal < 0f || uDecal > 1f || vDecal < 0f || vDecal > 1f) return 0f;
+
+            float texAlpha = tex != null ? tex.GetPixelBilinear(uDecal, vDecal).a : 1f;
+            return texAlpha * colorAlpha;
         }
 
         //----------------------------------------------------------------------------------------------------------------------
