@@ -145,38 +145,42 @@
         float2 sdexScale = max(abs(float2(_Decal##idx##ScaleX, _Decal##idx##ScaleY)), 1e-4); \
         float2 sdexPos   = float2(_Decal##idx##PosX, _Decal##idx##PosY); \
         uint sdexMir = _Decal##idx##Mirror; \
-        bool sdexLeftOnly  = sdexMir == 1; \
-        bool sdexRightOnly = sdexMir == 2; \
-        bool sdexCopy      = sdexMir == 3 || sdexMir == 4; \
-        bool sdexFlipCopy  = sdexMir == 4; \
-        bool sdexFlipMir   = sdexMir == 5; \
-        bool sdexIsRight   = (fd.uv0.x >= 0.5); \
-        /* lilCalcDecalUV のコピー折り畳みは abs(x-0.5)+0.5 で常に右半分へ写す。 \
-           デカールが左半分 (posX<0.5) にある場合は ST 位置を右半分へミラーし、 \
-           コピー側ピクセルの回転中心もコピー中心へ切り替える。 */ \
-        float2 sdexRotCenter = sdexPos; \
-        float2 sdexPosForST  = sdexPos; \
-        if(sdexCopy) { \
+        bool sdexIsPixelRight = (sdexUV.x >= 0.5); \
+        bool sdexShow = true; \
+        if(sdexMir == 1 && sdexIsPixelRight) sdexShow = false; \
+        if(sdexMir == 2 && !sdexIsPixelRight) sdexShow = false; \
+        if(sdexShow) \
+        { \
             bool sdexDecalOnRight = (sdexPos.x >= 0.5); \
-            if(sdexDecalOnRight != sdexIsRight) \
-                sdexRotCenter = float2(1.0 - sdexPos.x, sdexPos.y); \
-            if(!sdexDecalOnRight) \
-                sdexPosForST.x = 1.0 - sdexPos.x; \
+            bool sdexIsCopy = (sdexMir == 3 || sdexMir == 4) && (sdexDecalOnRight != sdexIsPixelRight); \
+            float2 sdexMappedUV = sdexIsCopy ? float2(1.0 - sdexUV.x, sdexUV.y) : sdexUV; \
+            float sdexActiveAngle = _Decal##idx##Angle; \
+            bool sdexFlipX = false; \
+            if(sdexMir == 4 && sdexIsCopy) \
+            { \
+                sdexFlipX = true; \
+            } \
+            else if(sdexMir == 5 && fd.isRightHand) \
+            { \
+                sdexActiveAngle = -sdexActiveAngle; \
+                sdexFlipX = true; \
+            } \
+            float sdexCosA, sdexSinA; \
+            sincos(sdexActiveAngle, sdexCosA, sdexSinA); \
+            float2 sdexDelta = sdexMappedUV - sdexPos; \
+            float2 sdexRotDelta = float2(sdexDelta.x * sdexCosA - sdexDelta.y * sdexSinA, \
+                                         sdexDelta.x * sdexSinA + sdexDelta.y * sdexCosA); \
+            float2 sdexLocalUV = sdexRotDelta / sdexScale; \
+            if(sdexFlipX) sdexLocalUV.x = -sdexLocalUV.x; \
+            float2 sdexFinalUV = sdexLocalUV + 0.5; \
+            float4 sdexCol = _Decal##idx##Color * lilGetSubTex( \
+                _Decal##idx##Tex, float4(1.0, 1.0, 0.0, 0.0), float4(0,0,0,0), 0.0, sdexFinalUV, fd.nv, \
+                true, false, false, false, false, false, false, fd.isRightHand, \
+                float4(1,1,1,1), float4(1,1,0,1) LIL_SAMP_IN(lil_sampler_linear_repeat)); \
+            if((_Decal##idx##Cull == 1 && fd.facing > 0) || (_Decal##idx##Cull == 2 && fd.facing < 0)) sdexCol.a = 0.0; \
+            fd.albedo = lilBlendColor(fd.albedo, sdexCol.rgb, sdexCol.a, _Decal##idx##BlendMode); \
+            sdexCoverage = max(sdexCoverage, sdexCol.a); \
         } \
-        float4 sdexST    = float4(1.0 / sdexScale, 0.5 - sdexPosForST / sdexScale); \
-        float sdexCosA, sdexSinA; \
-        sincos(_Decal##idx##Angle, sdexCosA, sdexSinA); \
-        float2 sdexDelta = sdexUV - sdexRotCenter; \
-        sdexUV = sdexRotCenter + float2(sdexDelta.x * sdexCosA - sdexDelta.y * sdexSinA, \
-                                        sdexDelta.x * sdexSinA + sdexDelta.y * sdexCosA); \
-        if(sdexCopy && sdexPos.x < 0.5) sdexUV.x = 1.0 - sdexUV.x; \
-        float4 sdexCol = _Decal##idx##Color * lilGetSubTex( \
-            _Decal##idx##Tex, sdexST, float4(0,0,0,0), 0.0, sdexUV, fd.nv, \
-            true, sdexLeftOnly, sdexRightOnly, sdexCopy, sdexFlipMir, sdexFlipCopy, false, sdexIsRight, \
-            float4(1,1,1,1), float4(1,1,0,1) LIL_SAMP_IN(lil_sampler_linear_repeat)); \
-        if((_Decal##idx##Cull == 1 && fd.facing > 0) || (_Decal##idx##Cull == 2 && fd.facing < 0)) sdexCol.a = 0.0; \
-        fd.albedo = lilBlendColor(fd.albedo, sdexCol.rgb, sdexCol.a, _Decal##idx##BlendMode); \
-        sdexCoverage = max(sdexCoverage, sdexCol.a); \
     }
 
 // Add vertex shader input

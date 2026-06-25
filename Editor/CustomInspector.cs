@@ -405,25 +405,45 @@ namespace lilToon
         {
             if(scaleX <= 0f || scaleY <= 0f) return 0f;
 
-            float testU = u;
-            switch(mirror)
+            bool isPixelRight = (u >= 0.5f);
+
+            // 表示・非表示の判定
+            if(mirror == 1 && isPixelRight) return 0f; // Left Only
+            if(mirror == 2 && !isPixelRight) return 0f; // Right Only
+
+            bool decalOnRight = (posX >= 0.5f);
+            bool isCopy = (mirror == 3 || mirror == 4) && (decalOnRight != isPixelRight);
+            float mappedU = isCopy ? (1.0f - u) : u;
+
+            float activeAngle = angle; // マテリアルに格納されている値はすでにラジアン値
+            bool flipX = false;
+
+            if(mirror == 4 && isCopy)
             {
-                case 1: if(u >= 0.5f) return 0f; break;                  // Left Only
-                case 2: if(u <  0.5f) return 0f; break;                  // Right Only
-                case 3: case 4: testU = u >= 0.5f ? 1f - u : u; break;  // Symmetry Copy
-                // 0=None, 5=Flip on Mirror → use u as-is
+                flipX = true;
+            }
+            else if(mirror == 5 && isPixelRight)
+            {
+                activeAngle = -activeAngle;
+                flipX = true;
             }
 
-            // ST変換: メッシュUV → デカールテクスチャUV空間（中心0.5,0.5）
-            float du = (testU - posX) / scaleX;
-            float dv = (v     - posY) / scaleY;
+            float cosA = Mathf.Cos(activeAngle);
+            float sinA = Mathf.Sin(activeAngle);
 
-            // デカールテクスチャ空間内で(0.5,0.5)中心に回転
-            float rad    = angle * Mathf.Deg2Rad;
-            float cosA   = Mathf.Cos(rad);
-            float sinA   = Mathf.Sin(rad);
-            float uDecal = 0.5f + du * cosA - dv * sinA;
-            float vDecal = 0.5f + du * sinA + dv * cosA;
+            float deltaX = mappedU - posX;
+            float deltaY = v - posY;
+
+            float rotDeltaX = deltaX * cosA - deltaY * sinA;
+            float rotDeltaY = deltaX * sinA + deltaY * cosA;
+
+            float uDecal = rotDeltaX / scaleX;
+            float vDecal = rotDeltaY / scaleY;
+
+            if(flipX) uDecal = -uDecal;
+
+            uDecal += 0.5f;
+            vDecal += 0.5f;
 
             if(uDecal < 0f || uDecal > 1f || vDecal < 0f || vDecal > 1f) return 0f;
 
