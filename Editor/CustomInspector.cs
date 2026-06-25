@@ -48,6 +48,8 @@ namespace lilToon
 
         private static bool isShowCustomProperties;
         private static readonly bool[] isShowDecal = new bool[DecalCount];
+        private static int  s_PickingSlot = -1;
+        private static Rect s_PickerRect;
         private static bool isShowMatCap;
         private static bool isShowSticker;
         private static bool isShowMaskExport;
@@ -147,6 +149,7 @@ namespace lilToon
                 DrawPopup(decalCull[i],      L("Cull Mode", "表示面"), CullOptions);
 
                 EditorGUILayout.EndVertical();
+                DrawCoordPickerSection(material, i);
             }
 
             isShowMatCap = Foldout(L("MatCap (All Decals)", "MatCap（全デカール領域）"), isShowMatCap);
@@ -443,6 +446,91 @@ namespace lilToon
             float value = EditorGUILayout.Slider(label, prop.floatValue, min, max);
             if(EditorGUI.EndChangeCheck()) prop.floatValue = value;
             EditorGUI.showMixedValue = false;
+        }
+
+        private void DrawCoordPickerSection(Material material, int slotIndex)
+        {
+            bool isActive = (s_PickingSlot == slotIndex);
+
+            Color prevBg = GUI.backgroundColor;
+            if(isActive) GUI.backgroundColor = new Color(0.4f, 0.8f, 1.0f);
+            string btnLabel = isActive
+                ? L("[ Picking... ] Click to cancel", "[ 取得中... ] クリックでキャンセル")
+                : L("Pick Position on Texture", "テクスチャから座標を取得");
+            if(GUILayout.Button(btnLabel))
+            {
+                s_PickingSlot = isActive ? -1 : slotIndex;
+                m_MaterialEditor.Repaint();
+            }
+            GUI.backgroundColor = prevBg;
+
+            if(s_PickingSlot != slotIndex) return;
+
+            Texture mainTex = material.mainTexture;
+            if(mainTex == null || mainTex.width == 0)
+            {
+                EditorGUILayout.HelpBox(
+                    L("No main texture (_MainTex) assigned.",
+                      "メインテクスチャ (_MainTex) が設定されていません。"),
+                    MessageType.Warning);
+                return;
+            }
+
+            EditorGUILayout.HelpBox(
+                L("Click on the texture to set Position X/Y.",
+                  "テクスチャをクリックして位置 X/Y を設定します。"),
+                MessageType.None);
+
+            float availW   = EditorGUIUtility.currentViewWidth - 44f;
+            float aspect   = (float)mainTex.height / mainTex.width;
+            float previewH = Mathf.Min(availW * aspect, 300f);
+            float previewW = previewH / aspect;
+            Rect allocRect   = GUILayoutUtility.GetRect(availW, previewH);
+            Rect previewRect = new Rect(
+                allocRect.x + (allocRect.width - previewW) * 0.5f,
+                allocRect.y, previewW, previewH);
+            s_PickerRect = previewRect;
+
+            if(Event.current.type == EventType.Repaint)
+            {
+                EditorGUI.DrawPreviewTexture(previewRect, mainTex);
+
+                float px = decalPosX[slotIndex].floatValue;
+                float py = decalPosY[slotIndex].floatValue;
+                if(px >= 0f && px <= 1f && py >= 0f && py <= 1f)
+                {
+                    float cx = previewRect.x + px * previewRect.width;
+                    float cy = previewRect.y + (1f - py) * previewRect.height;
+                    const float HL = 8f;
+                    EditorGUI.DrawRect(new Rect(cx - HL, cy - 1f, HL * 2f, 2f), Color.red);
+                    EditorGUI.DrawRect(new Rect(cx - 1f, cy - HL, 2f, HL * 2f), Color.red);
+                    EditorGUI.DrawRect(new Rect(cx - 2f, cy - 2f, 4f, 4f), new Color(1f, 1f, 0f, 0.9f));
+                }
+
+                EditorGUI.DrawRect(new Rect(previewRect.x - 1, previewRect.y - 1, previewRect.width + 2, 1), Color.gray);
+                EditorGUI.DrawRect(new Rect(previewRect.x - 1, previewRect.yMax,  previewRect.width + 2, 1), Color.gray);
+                EditorGUI.DrawRect(new Rect(previewRect.x - 1, previewRect.y, 1, previewRect.height), Color.gray);
+                EditorGUI.DrawRect(new Rect(previewRect.xMax,  previewRect.y, 1, previewRect.height), Color.gray);
+
+
+            }
+
+            if(Event.current.type == EventType.MouseDown &&
+               Event.current.button == 0 &&
+               s_PickerRect.Contains(Event.current.mousePosition))
+            {
+                Vector2 local = Event.current.mousePosition - new Vector2(s_PickerRect.x, s_PickerRect.y);
+                float clickU = Mathf.Clamp01(local.x / s_PickerRect.width);
+                float clickV = Mathf.Clamp01(1f - local.y / s_PickerRect.height);
+
+                Undo.RecordObjects(m_MaterialEditor.targets,
+                    L("Set Decal Position", "デカール位置を設定"));
+                decalPosX[slotIndex].floatValue = clickU;
+                decalPosY[slotIndex].floatValue = clickV;
+
+                Event.current.Use();
+                m_MaterialEditor.Repaint();
+            }
         }
 
         protected override void ReplaceToCustomShaders()
