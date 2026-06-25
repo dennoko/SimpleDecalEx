@@ -156,9 +156,10 @@
         bool sdexCopy      = sdexMir == 3 || sdexMir == 4; \
         bool sdexFlipCopy  = sdexMir == 4; \
         bool sdexFlipMir   = sdexMir == 5; \
+        bool sdexIsRight = (fd.uv0.x >= 0.5); \
         float4 sdexCol = _Decal##idx##Color * lilGetSubTex( \
             _Decal##idx##Tex, sdexST, float4(0,0,0,0), 0.0, sdexUV, fd.nv, \
-            true, sdexLeftOnly, sdexRightOnly, sdexCopy, sdexFlipMir, sdexFlipCopy, false, fd.isRightHand, \
+            true, sdexLeftOnly, sdexRightOnly, sdexCopy, sdexFlipMir, sdexFlipCopy, false, sdexIsRight, \
             float4(1,1,1,1), float4(1,1,0,1) LIL_SAMP_IN(lil_sampler_linear_repeat)); \
         if((_Decal##idx##Cull == 1 && fd.facing > 0) || (_Decal##idx##Cull == 2 && fd.facing < 0)) sdexCol.a = 0.0; \
         fd.albedo = lilBlendColor(fd.albedo, sdexCol.rgb, sdexCol.a, _Decal##idx##BlendMode); \
