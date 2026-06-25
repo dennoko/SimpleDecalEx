@@ -114,6 +114,12 @@
 //   tex_uv = mesh_uv / scale + (0.5 - pos / scale)  ->  _ST = float4(1/scale, 0.5 - pos/scale)
 //   既定 (pos=0.5, scale=1) では _ST = (1,1,0,0) となり、変換なしでUV全面に一致する。
 //
+// 回転中心の修正:
+//   lilCalcDecalUV が行う回転はメッシュUV (0.5,0.5) 中心であり、デカール位置中心ではない。
+//   そのためデカールが中心以外にある場合、回転させると位置が大きくずれる。
+//   対策: lilGetSubTex に angle=0 を渡し、事前に sdexUV を sdexPos 中心で回転させる。
+//   これにより tex_uv = rotate(angle) * (uv - pos) / scale + 0.5 の正しい変換が得られる。
+//
 // _DecalNMirror（排他選択）-> lilCalcDecalUV のフラグへの展開:
 //   0:None / 1:Left Only / 2:Right Only / 3:Symmetry Copy / 4:Symmetry Copy(Flip) / 5:Flip on Mirror
 //
@@ -132,6 +138,11 @@
         float2 sdexScale = max(abs(float2(_Decal##idx##ScaleX, _Decal##idx##ScaleY)), 1e-4); \
         float2 sdexPos   = float2(_Decal##idx##PosX, _Decal##idx##PosY); \
         float4 sdexST    = float4(1.0 / sdexScale, 0.5 - sdexPos / sdexScale); \
+        float sdexCosA, sdexSinA; \
+        sincos(_Decal##idx##Angle, sdexCosA, sdexSinA); \
+        float2 sdexDelta = sdexUV - sdexPos; \
+        sdexUV = sdexPos + float2(sdexDelta.x * sdexCosA - sdexDelta.y * sdexSinA, \
+                                   sdexDelta.x * sdexSinA + sdexDelta.y * sdexCosA); \
         uint sdexMir = _Decal##idx##Mirror; \
         bool sdexLeftOnly  = sdexMir == 1; \
         bool sdexRightOnly = sdexMir == 2; \
@@ -139,7 +150,7 @@
         bool sdexFlipCopy  = sdexMir == 4; \
         bool sdexFlipMir   = sdexMir == 5; \
         float4 sdexCol = _Decal##idx##Color * lilGetSubTex( \
-            _Decal##idx##Tex, sdexST, float4(0,0,0,0), _Decal##idx##Angle, sdexUV, fd.nv, \
+            _Decal##idx##Tex, sdexST, float4(0,0,0,0), 0.0, sdexUV, fd.nv, \
             true, sdexLeftOnly, sdexRightOnly, sdexCopy, sdexFlipMir, sdexFlipCopy, false, fd.isRightHand, \
             float4(1,1,1,1), float4(1,1,0,1) LIL_SAMP_IN(lil_sampler_linear_repeat)); \
         if((_Decal##idx##Cull == 1 && fd.facing > 0) || (_Decal##idx##Cull == 2 && fd.facing < 0)) sdexCol.a = 0.0; \
