@@ -134,10 +134,10 @@ namespace lilToon
                 m_MaterialEditor.TexturePropertySingleLine(new GUIContent(L("Texture / Color", "テクスチャ / 色")), decalTex[i], decalColor[i]);
 
                 DrawSubHeader(L("Placement", "配置"));
-                m_MaterialEditor.ShaderProperty(decalPosX[i],   L("Position X", "位置 X"));
-                m_MaterialEditor.ShaderProperty(decalPosY[i],   L("Position Y", "位置 Y"));
-                m_MaterialEditor.ShaderProperty(decalScaleX[i], L("Scale X", "スケール X"));
-                m_MaterialEditor.ShaderProperty(decalScaleY[i], L("Scale Y", "スケール Y"));
+                DrawSlider(decalPosX[i],   L("Position X", "位置 X"), -1f, 1f);
+                DrawSlider(decalPosY[i],   L("Position Y", "位置 Y"), -1f, 1f);
+                DrawSlider(decalScaleX[i], L("Scale X", "スケール X"), 0f, 1f);
+                DrawSlider(decalScaleY[i], L("Scale Y", "スケール Y"), 0f, 1f);
                 m_MaterialEditor.ShaderProperty(decalAngle[i],  L("Angle", "角度"));
                 DrawPopup(decalUVMode[i], L("UV Mode", "UV モード"), UVModeOptions);
                 DrawPopup(decalMirror[i], L("Mirror Mode", "ミラー"), MirrorOptions);
@@ -433,6 +433,15 @@ namespace lilToon
             EditorGUI.BeginChangeCheck();
             index = EditorGUILayout.Popup(label, index, options);
             if(EditorGUI.EndChangeCheck()) prop.floatValue = index;
+            EditorGUI.showMixedValue = false;
+        }
+
+        private void DrawSlider(MaterialProperty prop, string label, float min, float max)
+        {
+            EditorGUI.showMixedValue = prop.hasMixedValue;
+            EditorGUI.BeginChangeCheck();
+            float value = EditorGUILayout.Slider(label, prop.floatValue, min, max);
+            if(EditorGUI.EndChangeCheck()) prop.floatValue = value;
             EditorGUI.showMixedValue = false;
         }
 
