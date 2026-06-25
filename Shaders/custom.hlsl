@@ -2,7 +2,7 @@
 // Macro
 
 // Custom variables
-// SimpleDecalEx: lilToon の lilGetSubTex デカール仕様のセットを 8 枚ぶん複製する。
+// SimpleDecalEx: lilToon の lilGetSubTex デカール仕様のセットを 7 枚ぶん複製する。
 // 配置は Position(中心UV) と Scale(UVサイズ) で持ち、合成時に _ST を組み立てる。
 // ミラー/コピー/左右限定は _DecalNMirror の単一 enum にまとめ、合成時にフラグへ展開する。
 #define LIL_CUSTOM_PROPERTIES \
@@ -83,17 +83,6 @@
     uint   _Decal7UVMode;   \
     uint   _Decal7Cull;     \
     uint   _Decal7Mirror;   \
-    float4 _Decal8Color;    \
-    float  _Decal8PosX;     \
-    float  _Decal8PosY;     \
-    float  _Decal8ScaleX;   \
-    float  _Decal8ScaleY;   \
-    float  _Decal8Angle;    \
-    uint   _Decal8Enable;   \
-    uint   _Decal8BlendMode;\
-    uint   _Decal8UVMode;   \
-    uint   _Decal8Cull;     \
-    uint   _Decal8Mirror;   \
     float4 _SDEXMatCapColor;          \
     uint   _SDEXMatCapEnable;         \
     uint   _SDEXMatCapBlendMode;      \
@@ -105,7 +94,7 @@
     float  _SDEXAlphaOverrideStrength;
 
 // Custom textures
-// SimpleDecalEx: デカール 8 枚ぶんのテクスチャ。SAMPLER は新規に持たず、
+// SimpleDecalEx: デカール 7 枚ぶんのテクスチャ。SAMPLER は新規に持たず、
 // lilToon 共有の lil_sampler_linear_repeat を流用してサンプラー数の上限を回避する。
 #define LIL_CUSTOM_TEXTURES \
     TEXTURE2D(_Decal1Tex); \
@@ -115,7 +104,6 @@
     TEXTURE2D(_Decal5Tex); \
     TEXTURE2D(_Decal6Tex); \
     TEXTURE2D(_Decal7Tex); \
-    TEXTURE2D(_Decal8Tex); \
     TEXTURE2D(_SDEXMatCapTex);
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -215,7 +203,7 @@
 //#define BEFORE_xx
 //#define OVERRIDE_xx
 
-// SimpleDecalEx: albedo 確定後・陰影計算の直前（BEFORE_SHADOW）で 6 枚のデカールを
+// SimpleDecalEx: albedo 確定後・陰影計算の直前（BEFORE_SHADOW）で 7 枚のデカールを
 // fd.albedo に合成する。これによりメインカラー処理の後段に入り、かつ陰影で上書きされない。
 // 併せて、全デカールの可視アルファの和集合 sdexCoverage を蓄積し、後段の MatCap マスクに使う。
 // sdexCoverage は同一フラグメント関数内に展開される後続フック（BEFORE_EMISSION_1ST）から参照する。
@@ -228,7 +216,6 @@
     LIL_SDEX_APPLY(5) \
     LIL_SDEX_APPLY(6) \
     LIL_SDEX_APPLY(7) \
-    LIL_SDEX_APPLY(8) \
     if(_SDEXAlphaOverrideEnable) fd.col.a = lerp(fd.col.a, max(fd.col.a, sdexCoverage), sdexCoverage * _SDEXAlphaOverrideStrength);
 
 // SimpleDecalEx: MatCap 合成。
