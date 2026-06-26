@@ -50,6 +50,7 @@ namespace lilToon
         private static readonly bool[] isShowDecal = new bool[DecalCount];
         private static int  s_PickingSlot = -1;
         private static Rect s_PickerRect;
+        private static Texture2D s_DummyTex;
         private static bool isShowMatCap;
         private static bool isShowSticker;
         private static bool isShowMaskExport;
@@ -454,6 +455,25 @@ namespace lilToon
         //----------------------------------------------------------------------------------------------------------------------
         // UI helpers
 
+        private static Texture2D GetDummyTexture()
+        {
+            if(s_DummyTex != null) return s_DummyTex;
+            const int size = 256;
+            const int cell = 16;
+            s_DummyTex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            var pixels = new Color32[size * size];
+            for(int y = 0; y < size; y++)
+                for(int x = 0; x < size; x++)
+                {
+                    bool checker = ((x / cell + y / cell) % 2 == 0);
+                    pixels[y * size + x] = checker ? new Color32(204, 204, 204, 255) : new Color32(153, 153, 153, 255);
+                }
+            s_DummyTex.SetPixels32(pixels);
+            s_DummyTex.Apply();
+            s_DummyTex.filterMode = FilterMode.Point;
+            return s_DummyTex;
+        }
+
         private static void DrawSubHeader(string label)
         {
             EditorGUILayout.Space(4f);
@@ -528,23 +548,39 @@ namespace lilToon
 
             if(s_PickingSlot != slotIndex) return;
 
+            int uvMode = Mathf.RoundToInt(decalUVMode[slotIndex].floatValue);
             Texture mainTex = material.mainTexture;
-            if(mainTex == null || mainTex.width == 0)
+            bool hasMainTex = mainTex != null && mainTex.width > 0;
+            bool uvMismatch = uvMode != 0;
+
+            Texture displayTex;
+            if(uvMismatch)
             {
+                displayTex = GetDummyTexture();
                 EditorGUILayout.HelpBox(
-                    L("No main texture (_MainTex) assigned.",
-                      "メインテクスチャ (_MainTex) が設定されていません。"),
-                    MessageType.Warning);
-                return;
+                    L("Decal uses UV" + uvMode + " but the main texture (_MainTex) is UV0. Showing a blank canvas — click to set position.",
+                      "デカールは UV" + uvMode + " を参照していますが、メインテクスチャ (_MainTex) は UV0 です。ブランクキャンバスを表示します — クリックして位置を設定してください。"),
+                    MessageType.Info);
+            }
+            else if(!hasMainTex)
+            {
+                displayTex = GetDummyTexture();
+                EditorGUILayout.HelpBox(
+                    L("No main texture (_MainTex) assigned. Showing a blank canvas — click to set position.",
+                      "メインテクスチャ (_MainTex) が設定されていません。ブランクキャンバスを表示します — クリックして位置を設定してください。"),
+                    MessageType.Info);
+            }
+            else
+            {
+                displayTex = mainTex;
+                EditorGUILayout.HelpBox(
+                    L("Click on the texture to set Position X/Y.",
+                      "テクスチャをクリックして位置 X/Y を設定します。"),
+                    MessageType.None);
             }
 
-            EditorGUILayout.HelpBox(
-                L("Click on the texture to set Position X/Y.",
-                  "テクスチャをクリックして位置 X/Y を設定します。"),
-                MessageType.None);
-
             float availW   = EditorGUIUtility.currentViewWidth - 44f;
-            float aspect   = (float)mainTex.height / mainTex.width;
+            float aspect   = (float)displayTex.height / displayTex.width;
             float previewH = Mathf.Min(availW * aspect, 300f);
             float previewW = previewH / aspect;
             Rect allocRect   = GUILayoutUtility.GetRect(availW, previewH);
@@ -555,7 +591,7 @@ namespace lilToon
 
             if(Event.current.type == EventType.Repaint)
             {
-                EditorGUI.DrawPreviewTexture(previewRect, mainTex);
+                EditorGUI.DrawPreviewTexture(previewRect, displayTex);
 
                 float px = decalPosX[slotIndex].floatValue;
                 float py = decalPosY[slotIndex].floatValue;
