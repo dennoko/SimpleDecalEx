@@ -46,6 +46,9 @@ namespace lilToon
         private MaterialProperty alphaOverrideEnable;
         private MaterialProperty alphaOverrideStrength;
 
+        // Global mip bias
+        private MaterialProperty decalMipBias;
+
         private static bool isShowCustomProperties;
         private static readonly bool[] isShowDecal = new bool[DecalCount];
         private static int  s_PickingSlot = -1;
@@ -54,6 +57,7 @@ namespace lilToon
         private static bool isShowMatCap;
         private static bool isShowSticker;
         private static bool isShowMaskExport;
+        private static bool isShowMipBias;
         private static int  maskResolutionIdx = 2; // default = 512
         private static int  maskUVChannel;
         private static string maskOutputDir = "Assets/DecalMask/";
@@ -134,6 +138,7 @@ namespace lilToon
             matcapEnableLighting = FindProperty("_SDEXMatCapEnableLighting", props);
             alphaOverrideEnable   = FindProperty("_SDEXAlphaOverrideEnable", props);
             alphaOverrideStrength = FindProperty("_SDEXAlphaOverrideStrength", props);
+            decalMipBias          = FindProperty("_DecalMipBias", props);
         }
 
         protected override void DrawCustomProperties(Material material)
@@ -214,6 +219,21 @@ namespace lilToon
             }
 
             DrawMaskExportSection(material);
+
+            isShowMipBias = Foldout(L("Mip Bias", "ミップバイアス"), isShowMipBias);
+            if(isShowMipBias)
+            {
+                EditorGUILayout.BeginVertical(boxInner);
+                EditorGUILayout.HelpBox(
+                    L("Negative values sharpen all decals at distance by biasing mip level selection. 0 = hardware automatic, -1.5 to -4 recommended.",
+                      "負値にするほど遠距離でのデカールのぼけを抑制します。0=自動、-1.5〜-4 が目安です。"),
+                    MessageType.None);
+                DrawSlider(decalMipBias, new GUIContent(
+                    L("Mip Bias", "ミップバイアス"),
+                    L("Negative values sharpen all decals at distance.", "負値にするほど遠距離でのぼけを抑制します。")),
+                    -8f, 0f);
+                EditorGUILayout.EndVertical();
+            }
 
             EditorGUILayout.EndVertical();
         }

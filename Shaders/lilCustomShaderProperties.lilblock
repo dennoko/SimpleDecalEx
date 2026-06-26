@@ -18,6 +18,8 @@
         //   ミラー/コピー/左右限定は _DecalNMirror の単一ドロップダウンで排他選択する。
         //   合成・表示はカスタムインスペクタ側で手動描画するため、ここでの属性は既定インスペクタ用の保険。
 
+                        _DecalMipBias       ("Decal Mip Bias", Range(-8, 0)) = -1.5
+
         [lilToggle]     _Decal1Enable       ("Decal 1 Enable", Int) = 0
         [NoScaleOffset] _Decal1Tex          ("Decal 1 Texture", 2D) = "white" {}
         [lilHDR]        _Decal1Color        ("Decal 1 Color", Color) = (1,1,1,1)

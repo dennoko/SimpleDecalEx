@@ -90,6 +90,7 @@
     uint   _Decal7UVMode;   \
     uint   _Decal7Cull;     \
     uint   _Decal7Mirror;   \
+    float  _DecalMipBias;             \
     float4 _SDEXMatCapColor;          \
     uint   _SDEXMatCapEnable;         \
     uint   _SDEXMatCapBlendMode;      \
@@ -173,10 +174,10 @@
             float2 sdexLocalUV = sdexRotDelta / sdexScale; \
             if(sdexFlipX) sdexLocalUV.x = -sdexLocalUV.x; \
             float2 sdexFinalUV = sdexLocalUV + 0.5; \
-            float4 sdexCol = _Decal##idx##Color * lilGetSubTex( \
-                _Decal##idx##Tex, float4(1.0, 1.0, 0.0, 0.0), float4(0,0,0,0), 0.0, sdexFinalUV, fd.nv, \
-                true, false, false, false, false, false, false, fd.isRightHand, \
-                float4(1,1,1,1), float4(1,1,0,1) LIL_SAMP_IN(lil_sampler_linear_repeat)); \
+            bool sdexInRange = all(sdexFinalUV >= 0.0) && all(sdexFinalUV <= 1.0); \
+            float4 sdexCol = sdexInRange \
+                ? _Decal##idx##Color * _Decal##idx##Tex.SampleBias(lil_sampler_linear_repeat, sdexFinalUV, _DecalMipBias) \
+                : float4(0, 0, 0, 0); \
             if((_Decal##idx##Cull == 1 && fd.facing > 0) || (_Decal##idx##Cull == 2 && fd.facing < 0)) sdexCol.a = 0.0; \
             fd.albedo = lilBlendColor(fd.albedo, sdexCol.rgb, sdexCol.a, _Decal##idx##BlendMode); \
             sdexCoverage = max(sdexCoverage, sdexCol.a); \
