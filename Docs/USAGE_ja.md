@@ -1,12 +1,12 @@
-# SimpleDecalEx使い方
+# めっちゃデカールEx (MettyaDecalEx) 使い方
 
 ## シェーダーの切り替え
-シェーダー一覧から **dennokoworks/SimpleDecalEx** を選択してください。
+シェーダー一覧から **dennokoworks/MettyaDecalEx** を選択してください。
 
-## SimpleDecalEx パラメーター説明
+## MettyaDecalEx パラメーター説明
 
-SimpleDecalEx は lilToon のデカール仕様に準拠したデカールを **7 枚**追加するカスタムシェーダーです。  
-マテリアルインスペクター上の「SimpleDecalEx」セクション内に、以下のパラメーターが表示されます。
+MettyaDecalEx は lilToon のデカール仕様に準拠したデカールを **7 枚**追加するカスタムシェーダーです。  
+マテリアルインスペクター上の「MettyaDecalEx」セクション内に、以下のパラメーターが表示されます。
 
 ---
 
