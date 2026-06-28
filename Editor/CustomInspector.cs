@@ -5,19 +5,19 @@ using UnityEngine;
 
 namespace lilToon
 {
-    // SimpleDecalEx: lilToon のデカール仕様に準拠したデカールを 7 枚追加するカスタムシェーダー。
+    // MettyaDecalEx: lilToon のデカール仕様に準拠したデカールを 7 枚追加するカスタムシェーダー。
     // 名前の整合性（4 箇所）:
-    //   1. この class 名 SimpleDecalExInspector
-    //   2. 下の shaderName 定数 "dennokoworks/SimpleDecalEx"
+    //   1. この class 名 MettyaDecalExInspector
+    //   2. 下の shaderName 定数 "dennokoworks/MettyaDecalEx"
     //   3. Shaders/lilCustomShaderDatas.lilblock の ShaderName / EditorName タグ
-    //   4. Editor/SimpleDecalEx.asmdef の name フィールドとファイル名
+    //   4. Editor/MettyaDecalEx.asmdef の name フィールドとファイル名
     //
     // enum（UV Mode / Blend Mode / Cull / Mirror）は lilEnum ドロワーに頼らず、
     // EditorGUILayout.Popup で手動描画する（ドロワー経由だと選択できない不具合があるため）。
-    public class SimpleDecalExInspector : lilToonInspector
+    public class MettyaDecalExInspector : lilToonInspector
     {
         private const int DecalCount = 7;
-        private const string shaderName = "dennokoworks/SimpleDecalEx";
+        private const string shaderName = "dennokoworks/MettyaDecalEx";
 
         private readonly MaterialProperty[] decalEnable    = new MaterialProperty[DecalCount];
         private readonly MaterialProperty[] decalTex       = new MaterialProperty[DecalCount];
@@ -143,7 +143,7 @@ namespace lilToon
 
         protected override void DrawCustomProperties(Material material)
         {
-            isShowCustomProperties = Foldout("SimpleDecalEx", "SimpleDecalEx", isShowCustomProperties);
+            isShowCustomProperties = Foldout("MettyaDecalEx", "MettyaDecalEx", isShowCustomProperties);
             if(!isShowCustomProperties) return;
 
             EditorGUILayout.BeginVertical(boxOuter);
@@ -346,7 +346,7 @@ namespace lilToon
                 Selection.activeObject = folderAsset;
                 EditorGUIUtility.PingObject(folderAsset);
             }
-            Debug.Log("[SimpleDecalEx] Decal mask exported to: " + dir);
+            Debug.Log("[MettyaDecalEx] Decal mask exported to: " + dir);
         }
 
         private static string SaveMaskTexture(Color32[] pixels, int size, string baseName, string suffix)
